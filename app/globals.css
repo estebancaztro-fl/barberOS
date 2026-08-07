@@ -481,6 +481,59 @@ td svg { width: 15px; height: 15px; color: var(--mut); vertical-align: -2px; mar
 .pill-sm { border-radius: 999px; padding: 3px 11px; font-size: 11.5px; font-weight: 700; background: var(--badge); color: #1f5170; }
 .pill-sm.fin { background: #d6f2e2; color: #14713d; }
 
+/* ---------- Análisis de rostro ---------- */
+.spinner {
+  width: 42px; height: 42px; margin: 0 auto;
+  border: 3px solid rgba(23,23,26,0.12);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: girar 0.9s linear infinite;
+}
+@keyframes girar { to { transform: rotate(360deg); } }
+
+.res-cab {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 16px;
+  padding-bottom: 16px; border-bottom: 1px solid rgba(23,23,26,0.09);
+}
+.conf { font-size: 12.5px; font-weight: 700; margin-top: 3px; }
+.conf-alta { color: var(--green); }
+.conf-media { color: var(--amber); }
+.conf-baja { color: var(--red); }
+.aviso {
+  background: #fdf4e3; color: #8a5a08;
+  border-radius: 14px; padding: 13px 16px; margin-top: 16px;
+  font-size: 13.5px; font-weight: 600; line-height: 1.5;
+}
+.med-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+.med { display: flex; align-items: center; gap: 9px; background: #f4f5f7; border-radius: 12px; padding: 11px 12px; }
+.med b { font-size: 14.5px; font-weight: 700; }
+.med-c { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.bloque { border-top: 1px solid rgba(23,23,26,0.09); padding-top: 18px; margin-bottom: 18px; }
+.bloque-t { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+.lista { list-style: none; }
+.lista li { font-size: 14.5px; line-height: 1.55; padding: 5px 0 5px 20px; position: relative; }
+.lista li::before { content: "·"; position: absolute; left: 6px; font-weight: 800; }
+.lista.si li::before { content: "✓"; color: var(--green); font-size: 12px; left: 2px; }
+.lista.no li::before { content: "✕"; color: var(--red); font-size: 11px; left: 2px; }
+.barra-fila { display: flex; align-items: center; gap: 12px; font-size: 14px; padding: 5px 0; }
+.barra-fila span { min-width: 92px; }
+.barra-fila b { min-width: 40px; text-align: right; font-weight: 700; }
+.barra { flex: 1; height: 8px; background: rgba(23,23,26,0.09); border-radius: 999px; overflow: hidden; }
+.barra div { height: 100%; background: #17171a; border-radius: 999px; }
+
+.rostro-res {
+  display: flex; align-items: center; gap: 14px;
+  background: linear-gradient(135deg, #f0f7fd, #fdeef0);
+  border-radius: 16px; padding: 14px 18px; margin-top: 16px;
+}
+.rostro-res .grow { flex: 1; min-width: 0; }
+.rostro-res b { font-size: 16px; font-weight: 700; }
+.reco-box {
+  margin-top: 24px; padding-top: 22px;
+  border-top: 1px solid rgba(23,23,26,0.1);
+}
+.reco-box .lista li { padding-left: 22px; }
+
 /* ---------- Reserva pública ---------- */
 .pub { max-width: 660px; margin: 0 auto; padding: 46px 22px 90px; }
 .pub-head { display: flex; align-items: center; gap: 18px; margin-bottom: 34px; }

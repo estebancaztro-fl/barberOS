@@ -1,4 +1,27 @@
-# BarberOS — V0.3 (prototipo UX, mobile first)
+# BarberOS — V0.4 (mobile first + análisis de rostro)
+
+## Novedades de la V0.4
+
+- **Inicio según el rol**: administrador y recepción entran al Dashboard; el barbero entra directo a su Agenda (y no ve el Dashboard, que muestra datos de caja).
+- **Análisis de forma de rostro** desde la ficha del cliente, botón "Analizar con foto".
+
+### Cómo funciona el análisis (sin servicios de IA externos)
+
+1. **MediaPipe Face Mesh** (librería de Google, gratis) detecta 468 puntos del rostro sobre la foto.
+2. Se **corrige la inclinación** de la cabeza alineando la línea de los ojos.
+3. Se miden 4 distancias: largo, ancho de frente, de pómulos y de mandíbula.
+4. Se calculan 3 proporciones y se comparan con un **perfil de referencia por cada forma**. Cada forma recibe un puntaje de similitud de 0 a 100.
+5. Si las dos primeras formas quedan muy cerca, avisa que la **confianza es baja** para que el barbero revise a mano.
+
+No hay entrenamiento ni dataset: las referencias son proporciones antropométricas, así que el resultado siempre se puede explicar. La pantalla muestra las medidas, el porqué en palabras, y la similitud con las 6 formas.
+
+**Privacidad**: todo ocurre dentro del dispositivo. La foto no se sube a ningún servidor y se descarta al cerrar; solo se guarda la forma resultante, las proporciones y la fecha. Aun así, una foto de rostro es dato biométrico: pide consentimiento al cliente antes de fotografiarlo.
+
+La lógica vive en `lib/rostro.js` — ahí se ajustan los perfiles de referencia y las recomendaciones de corte de cada forma.
+
+---
+
+# V0.3 (mobile first)
 
 SaaS de gestión para barberías. Prototipo navegable para testear la experiencia: todo funciona y se guarda, pero en el navegador de cada persona (aún no hay servidor ni base de datos).
 

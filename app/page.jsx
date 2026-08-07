@@ -1,4 +1,6 @@
 "use client";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Shell from "@/components/Shell";
 import { useApp, fmt, hoyISO } from "@/lib/store";
 import { Money } from "@/components/Icons";
@@ -7,7 +9,16 @@ const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export default function Dashboard() {
   const app = useApp();
+  const router = useRouter();
+  const rol = app?.rol;
+
+  /* El barbero entra directo a su agenda */
+  useEffect(() => {
+    if (rol === "barbero") router.replace("/agenda");
+  }, [rol, router]);
+
   if (!app) return null;
+  if (rol === "barbero") return null;
   const { sucursal, reservas, ingresos, clientes, barberos, servicios } = app;
 
   const hoy = hoyISO();

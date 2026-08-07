@@ -6,7 +6,7 @@ import { useApp } from "@/lib/store";
 import { Scissors, Grid, Calendar, Users, Dollar, Chat, Settings, ChevronDown, X } from "@/components/Icons";
 
 const NAV = [
-  { href: "/", label: "Inicio", full: "Dashboard", Icon: Grid },
+  { href: "/", label: "Inicio", full: "Dashboard", Icon: Grid, noBarbero: true },
   { href: "/agenda", label: "Agenda", full: "Agenda", Icon: Calendar },
   { href: "/clientes", label: "Clientes", full: "Clientes", Icon: Users },
   { href: "/finanzas", label: "Finanzas", full: "Finanzas", Icon: Dollar, soloAdmin: true },

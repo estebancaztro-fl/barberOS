@@ -42,7 +42,7 @@ const seed = {
     {
       id: "c2", nombre: "Francisca Soto", telefono: "+56 9 7654 3210", correo: "francisca@mail.com",
       vip: false, cortes: 0, ultimaVisita: daysAgo(8),
-      observaciones: "", tipoPelo: "", densidad: "", formaRostro: "", notasVoz: [],
+      observaciones: "", tipoPelo: "", densidad: "", formaRostro: "", notasVoz: [], analisisRostro: null,
     },
     {
       id: "c3", nombre: "Matías Cifuentes", telefono: "+56 9 6543 2109", correo: "matias@mail.com",

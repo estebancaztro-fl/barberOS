@@ -23,7 +23,7 @@ export default function Clientes() {
       d.clientes.push({
         id: uid(), nombre: f.nombre, telefono: f.telefono, correo: f.correo,
         vip: false, cortes: 0, ultimaVisita: hoyISO(),
-        observaciones: "", tipoPelo: "", densidad: "", formaRostro: "", notasVoz: [],
+        observaciones: "", tipoPelo: "", densidad: "", formaRostro: "", notasVoz: [], analisisRostro: null,
       });
       return d;
     });

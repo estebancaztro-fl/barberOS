@@ -2,8 +2,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Shell from "@/components/Shell";
+import AnalisisRostro from "@/components/AnalisisRostro";
 import { useApp, proximaVisita, INTERVALO_SUGERIDO } from "@/lib/store";
-import { ChevronLeft, Phone, Mail, Mic, ImgIcon, Clock, Scissors, Note, Save, BarberPole } from "@/components/Icons";
+import { FORMAS } from "@/lib/rostro";
+import { ChevronLeft, Phone, Mail, Mic, ImgIcon, Clock, Scissors, Note, Save, BarberPole, X } from "@/components/Icons";
 
 const TIPO_PELO = ["Liso", "Ondulado", "Rulo", "Afro"];
 const DENSIDAD = ["Fino", "Medio", "Grueso"];
@@ -15,6 +17,7 @@ export default function FichaCliente() {
   const router = useRouter();
   const [form, setForm] = useState(null);
   const [guardado, setGuardado] = useState(false);
+  const [analizando, setAnalizando] = useState(false);
 
   const cliente = app?.clientes.find((c) => c.id === id);
 
@@ -51,6 +54,30 @@ export default function FichaCliente() {
     setGuardado(true);
     setTimeout(() => setGuardado(false), 2000);
   };
+
+  /* Guarda el resultado del análisis. La foto nunca se almacena. */
+  const usarAnalisis = (r) => {
+    setForm((p) => ({ ...p, formaRostro: r.forma }));
+    update((d) => {
+      const c = d.clientes.find((x) => x.id === id);
+      if (c) {
+        c.formaRostro = r.forma;
+        c.analisisRostro = {
+          forma: r.forma,
+          similitud: r.ranking[0].similitud,
+          confianza: r.confianza,
+          proporciones: r.proporciones,
+          fecha: new Date().toISOString().slice(0, 10),
+        };
+      }
+      return d;
+    });
+    setAnalizando(false);
+    setGuardado(true);
+    setTimeout(() => setGuardado(false), 2000);
+  };
+
+  const reco = form.formaRostro ? FORMAS[form.formaRostro] : null;
 
   const historial = reservas
     .filter((r) => r.clienteId === id && r.estado !== "cancelado")
@@ -106,12 +133,60 @@ export default function FichaCliente() {
               <Grupo label="Tipo de pelo" opciones={TIPO_PELO} valor={form.tipoPelo} onPick={(v) => set("tipoPelo", v)} />
               <Grupo label="Densidad" opciones={DENSIDAD} valor={form.densidad} onPick={(v) => set("densidad", v)} />
             </div>
-            <Grupo label="Forma del rostro" opciones={ROSTRO} valor={form.formaRostro} onPick={(v) => set("formaRostro", v)} />
+            <div className="opt-group">
+              <div className="lbl" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                <span>Forma del rostro</span>
+                <button className="btn glow sm" onClick={() => setAnalizando(true)}>
+                  <ImgIcon style={{ width: 15, height: 15 }} /> Analizar con foto
+                </button>
+              </div>
+              <div className="chips">
+                {ROSTRO.map((o) => (
+                  <button key={o} className={"opt" + (form.formaRostro === o ? " on" : "")}
+                    onClick={() => set("formaRostro", form.formaRostro === o ? "" : o)}>{o}</button>
+                ))}
+              </div>
+              {cliente.analisisRostro?.forma === form.formaRostro && (
+                <div className="rostro-res">
+                  <ImgIcon style={{ width: 20, height: 20, flexShrink: 0 }} />
+                  <div className="grow">
+                    <b>{cliente.analisisRostro.forma} · {cliente.analisisRostro.similitud}%</b>
+                    <div className="muted" style={{ fontSize: 12.5 }}>
+                      Analizado el {cliente.analisisRostro.fecha} · coincidencia {cliente.analisisRostro.confianza}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <GrabadorVoz onTexto={(t) => set("observaciones", (form.observaciones ? form.observaciones + " " : "") + t)} />
         </div>
+
+        {reco && (
+          <div className="reco-box">
+            <p style={{ lineHeight: 1.6, marginBottom: 16 }}>{reco.resumen}</p>
+            <div className="two-col" style={{ gap: 18 }}>
+              <div>
+                <div className="bloque-t"><Scissors style={{ width: 15, height: 15, verticalAlign: -3, marginRight: 7 }} />Cortes que favorecen</div>
+                <ul className="lista si">{reco.favorece.map((t, i) => <li key={i}>{t}</li>)}</ul>
+              </div>
+              <div>
+                <div className="bloque-t"><X style={{ width: 14, height: 14, verticalAlign: -2, marginRight: 7 }} />Mejor evitar</div>
+                <ul className="lista no">{reco.evitar.map((t, i) => <li key={i}>{t}</li>)}</ul>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+
+      {analizando && (
+        <AnalisisRostro
+          nombreCliente={cliente.nombre}
+          onClose={() => setAnalizando(false)}
+          onUsar={usarAnalisis}
+        />
+      )}
 
       <div className="card dark">
         <h3 style={{ fontSize: 21, fontWeight: 700, marginBottom: 20 }}>Historial de cortes</h3>
