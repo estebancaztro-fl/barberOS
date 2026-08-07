@@ -56,10 +56,15 @@ export default function Clientes() {
           <tbody>
             {lista.map((c) => (
               <tr key={c.id} onClick={() => router.push(`/clientes/${c.id}`)} style={{ cursor: "pointer" }}>
-                <td><b style={{ fontWeight: 700 }}>{c.nombre}</b></td>
-                <td><Phone />{c.telefono || "—"}</td>
-                <td><Mail />{c.correo || "—"}</td>
-                <td style={{ textAlign: "right" }}>{c.vip && <BarberPole size={22} />}</td>
+                <td data-label="CLIENTE">
+                  <b style={{ fontWeight: 700 }}>{c.nombre}</b>
+                  {c.vip && <span className="solo-movil"><BarberPole size={20} /></span>}
+                </td>
+                <td data-label="TELÉFONO"><span><Phone />{c.telefono || "—"}</span></td>
+                <td data-label="CORREO"><span><Mail />{c.correo || "—"}</span></td>
+                <td data-label="VIP" className="col-vip" style={{ textAlign: "right" }}>
+                  {c.vip ? <BarberPole size={22} /> : <span className="solo-movil muted">—</span>}
+                </td>
               </tr>
             ))}
             {lista.length === 0 && (

@@ -1,10 +1,23 @@
-# BarberOS — V0.2 (prototipo UX)
+# BarberOS — V0.3 (prototipo UX, mobile first)
 
 SaaS de gestión para barberías. Prototipo navegable para testear la experiencia: todo funciona y se guarda, pero en el navegador de cada persona (aún no hay servidor ni base de datos).
 
 **Los archivos ya están en esta carpeta.** No tienes que mover nada.
 
 ---
+
+## Novedades de la V0.3 — móvil
+
+En el celular (menos de 900px de ancho) la app cambia de forma:
+
+- **Barra inferior fija** con Inicio, Agenda, Clientes, CRM y **Más** (Finanzas, Admin, sucursal y rol)
+- **Cabecera compacta** arriba con el nombre de la barbería y la sucursal activa
+- **Las tablas se convierten en tarjetas** apiladas, legibles sin desplazamiento horizontal
+- **Los modales suben desde abajo** como hoja, al estilo de una app nativa
+- Botones y campos con área táctil grande; los campos usan 16px para que **iPhone no haga zoom** al escribir
+- Respeta la zona segura de los iPhone con notch
+
+El sidebar sigue apareciendo en tablet y escritorio.
 
 ## Novedades de la V0.2
 

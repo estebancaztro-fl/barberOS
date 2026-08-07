@@ -90,11 +90,11 @@ export default function CRM() {
                     const d = proximaVisita(c);
                     return (
                       <tr key={c.id}>
-                        <td><Link href={`/clientes/${c.id}`}><b style={{ fontWeight: 700 }}>{c.nombre}</b></Link></td>
-                        <td><Phone />{c.telefono || "—"}</td>
-                        <td><Mail />{c.correo || "—"}</td>
-                        <td style={{ textAlign: "right", color: d > 0 ? "var(--accent)" : "var(--red)", fontWeight: 600 }}>
-                          {d > 0 ? `sugerida: ${d} días` : `atrasada ${Math.abs(d)} días`}
+                        <td data-label="CLIENTE"><Link href={`/clientes/${c.id}`}><b style={{ fontWeight: 700 }}>{c.nombre}</b></Link></td>
+                        <td data-label="TELÉFONO"><span><Phone />{c.telefono || "—"}</span></td>
+                        <td data-label="CORREO"><span><Mail />{c.correo || "—"}</span></td>
+                        <td data-label="PRÓXIMA VISITA" style={{ textAlign: "right", color: d > 0 ? "var(--accent)" : "var(--red)", fontWeight: 600 }}>
+                          <span>{d > 0 ? `sugerida: ${d} días` : `atrasada ${Math.abs(d)} días`}</span>
                         </td>
                       </tr>
                     );
@@ -120,7 +120,7 @@ export default function CRM() {
                 <span className="dots">
                   {Array.from({ length: 6 }, (_, i) => <span key={i} className={"dot" + (i < n ? " on" : "")} />)}
                 </span>
-                <span className="muted" style={{ minWidth: 214, textAlign: "right" }}>
+                <span className="muted fidel-txt">
                   {n}/6 · próximo corte gratis en <b style={{ color: "var(--accent)" }}>{6 - n}</b>
                 </span>
               </div>

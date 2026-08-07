@@ -102,7 +102,7 @@ export default function FichaCliente() {
         <div className="visagismo">
           <div>
             <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 18 }}>Perfil capilar</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+            <div className="perfil-grid">
               <Grupo label="Tipo de pelo" opciones={TIPO_PELO} valor={form.tipoPelo} onPick={(v) => set("tipoPelo", v)} />
               <Grupo label="Densidad" opciones={DENSIDAD} valor={form.densidad} onPick={(v) => set("densidad", v)} />
             </div>

@@ -197,7 +197,7 @@ function MiembroModal({ item, onClose, onSave }) {
         <div className="field"><label>Correo</label><input placeholder="correo@mail.com" value={f.correo} onChange={(e) => set("correo", e.target.value)} /></div>
         <div className="field"><label>Teléfono</label><input placeholder="+56 9 0000 0000" value={f.telefono} onChange={(e) => set("telefono", e.target.value)} /></div>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 190px", gap: 18, alignItems: "start" }}>
+      <div className="rol-grid">
         <div className="field">
           <label>Rol asignado</label>
           <div className="chips">

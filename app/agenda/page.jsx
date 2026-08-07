@@ -51,7 +51,7 @@ export default function Agenda() {
           <h2>Agenda</h2>
           <div className="sub" suppressHydrationWarning>{fechaTxt} · {sucursal?.nombre}</div>
         </div>
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-start" }}>
+        <div className="agenda-ctrl">
           <div className="tabs" style={{ margin: 0 }}>
             <button className={vista === "dia" ? "on" : ""} onClick={() => setVista("dia")}>Día</button>
             <button className={vista === "semana" ? "on" : ""} onClick={() => setVista("semana")}>Semana</button>
@@ -61,7 +61,7 @@ export default function Agenda() {
             <button onClick={() => setFecha(hoyISO())}>Hoy</button>
             <button onClick={() => setFecha(addDays(fecha, vista === "dia" ? 1 : 7))}><ChevronRight style={{ width: 16, height: 16 }} /></button>
           </div>
-          <button className="btn dark" onClick={() => setModal({ hora: "13:00" })}><Plus /> Reservar</button>
+          <button className="btn dark agenda-add" onClick={() => setModal({ hora: "13:00" })}><Plus /> Reservar</button>
         </div>
       </div>
 
@@ -172,9 +172,9 @@ function NuevaReserva({ horaInicial, fecha, servicios, barberos, clientes, onClo
       <div className="grid2">
         <div className="field">
           <label>Fecha y hora</label>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div className="fechahora">
             <input type="date" value={f.fecha} onChange={(e) => set("fecha", e.target.value)} />
-            <select style={{ width: 116 }} value={f.hora} onChange={(e) => set("hora", e.target.value)}>
+            <select value={f.hora} onChange={(e) => set("hora", e.target.value)}>
               {HORAS.map((h) => <option key={h} value={h}>{h}</option>)}
             </select>
           </div>

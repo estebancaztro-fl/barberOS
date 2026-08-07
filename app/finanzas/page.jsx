@@ -50,9 +50,9 @@ export default function Finanzas() {
     <Shell>
       <div className="page-head">
         <div><h2>Finanzas</h2><div className="sub">Solo Administrador</div></div>
-        <div style={{ position: "relative" }}>
+        <div className="mes-picker">
           <input type="month" value={mes} onChange={(e) => setMes(e.target.value)}
-            style={{ width: "auto", background: "#17171a", color: "#fff", border: 0, fontWeight: 700, padding: "14px 20px", colorScheme: "dark", boxShadow: "0 0 0 1.5px rgba(238,141,150,0.5), 0 0 0 3px rgba(130,182,222,0.3)" }} />
+            style={{ background: "#17171a", color: "#fff", border: 0, fontWeight: 700, padding: "14px 20px", colorScheme: "dark", boxShadow: "0 0 0 1.5px rgba(238,141,150,0.5), 0 0 0 3px rgba(130,182,222,0.3)" }} />
         </div>
       </div>
 
@@ -105,7 +105,7 @@ export default function Finanzas() {
           <div className="listcard">
             {[...iMes].sort((a, b) => b.fecha.localeCompare(a.fecha)).map((i) => (
               <div className="listrow" key={i.id}>
-                <span className="muted" style={{ minWidth: 100 }}>{i.fecha}</span>
+                <span className="muted mov-fecha">{i.fecha}</span>
                 <div className="grow"><h4 style={{ fontWeight: 600 }}>{i.concepto}</h4></div>
                 <span className="badge grey">{cap(i.metodo)}</span>
                 <b className="money-green" style={{ minWidth: 92, textAlign: "right" }}>{fmt(i.monto)}</b>
@@ -120,7 +120,7 @@ export default function Finanzas() {
           <div className="listcard">
             {[...gMes].sort((a, b) => b.fecha.localeCompare(a.fecha)).map((g) => (
               <div className="listrow" key={g.id}>
-                <span className="muted" style={{ minWidth: 100 }}>{g.fecha}</span>
+                <span className="muted mov-fecha">{g.fecha}</span>
                 <div className="grow"><h4 style={{ fontWeight: 600 }}>{g.descripcion || g.categoria}</h4></div>
                 <span className="badge grey">{g.categoria}</span>
                 <b className="money-red" style={{ minWidth: 92, textAlign: "right" }}>{fmt(g.monto)}</b>
@@ -133,13 +133,13 @@ export default function Finanzas() {
       {tab === "comisiones" && (
         <div className="listcard">
           {comisiones.map(({ b, ing, calc, pagado, pendiente }) => (
-            <div className="listrow" key={b.id} style={{ gap: 22, flexWrap: "wrap" }}>
-              <b style={{ minWidth: 140, fontWeight: 700 }}>{b.nombre}</b>
+            <div className="listrow com-row" key={b.id} style={{ gap: 22, flexWrap: "wrap" }}>
+              <b className="com-nom" style={{ minWidth: 140, fontWeight: 700 }}>{b.nombre}</b>
               <span className="muted">ingresos: <b style={{ color: "var(--ink)" }}>{fmt(ing)}</b></span>
               <span className="muted">{b.comision}%</span>
               <span className="muted">Calc: <b style={{ color: "var(--ink)" }}>{fmt(calc)}</b></span>
               <span className="muted">Pagado <b className="money-green">{fmt(pagado)}</b></span>
-              <span className={"right " + (pendiente > 0 ? "money-red" : "muted")}>{fmt(pendiente)}</span>
+              <span className={"right com-pend " + (pendiente > 0 ? "money-red" : "muted")}>{fmt(pendiente)}</span>
               <button className="btn dark sm" onClick={() => setModal({ pagar: b, calc, pagado, pendiente })}>Pagar</button>
             </div>
           ))}
@@ -208,7 +208,7 @@ function PagarModal({ info, mes, onClose, onSave }) {
     <Modal title="Pagar comisión" sub={`${info.pagar.nombre}  ·  ${mes.replace("-", " - ")}`} onClose={onClose}
       footer={<><button className="link-btn" onClick={onClose}>Cancelar</button>
         <button className="btn dark" disabled={!monto} onClick={() => onSave(monto, metodo)}>Registrar pago</button></>}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 22 }}>
+      <div className="pay-grid">
         <Box label="Calculada" valor={fmt(info.calc)} />
         <Box label="Pagada" valor={fmt(info.pagado)} />
         <Box label="Pendiente" valor={fmt(info.pendiente)} alerta />
