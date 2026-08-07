@@ -6,6 +6,10 @@ export const metadata = {
   description: "Gestión de agenda, clientes, finanzas y CRM para barberías",
 };
 
+export const viewport = {
+  themeColor: "#1d1919",
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="es">

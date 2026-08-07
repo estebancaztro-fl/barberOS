@@ -1,70 +1,105 @@
 "use client";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useApp } from "@/lib/store";
+import { Scissors, Grid, Calendar, Users, Dollar, Chat, Settings, ChevronDown } from "@/components/Icons";
 
 const NAV = [
-  { href: "/", label: "Dashboard", icon: "▦" },
-  { href: "/agenda", label: "Agenda", icon: "🗓" },
-  { href: "/clientes", label: "Clientes", icon: "👥" },
-  { href: "/finanzas", label: "Finanzas", icon: "💼", admin: true },
-  { href: "/crm", label: "CRM", icon: "📇" },
-  { href: "/admin", label: "Admin", icon: "⚙" },
+  { href: "/", label: "Dashboard", Icon: Grid },
+  { href: "/agenda", label: "Agenda", Icon: Calendar },
+  { href: "/clientes", label: "Clientes", Icon: Users },
+  { href: "/finanzas", label: "Finanzas", Icon: Dollar, soloAdmin: true },
+  { href: "/crm", label: "CRM", Icon: Chat },
+  { href: "/admin", label: "Admin", Icon: Settings, noBarbero: true },
 ];
 
-const ROLES = { admin: "Administrador", recepcion: "Recepción", barbero: "Barbero" };
+const ROLES = [
+  ["admin", "Administrador", "Admin"],
+  ["recepcion", "Recepción", "Recepción"],
+  ["barbero", "Barbero", "Barbero"],
+];
 
 export default function Shell({ children }) {
   const app = useApp();
   const path = usePathname();
-  if (!app) return null;
-  const { db, barberia, sucursales, barberiaId, sucursalId, setSucursalId, rol, setRol, cambiarBarberia } = app;
+  const [abierto, setAbierto] = useState(false);
+  const ref = useRef(null);
 
-  const nav = NAV.filter((n) => !(n.admin && rol !== "admin") && !(n.href === "/admin" && rol === "barbero"));
+  useEffect(() => {
+    const fn = (e) => { if (ref.current && !ref.current.contains(e.target)) setAbierto(false); };
+    document.addEventListener("mousedown", fn);
+    return () => document.removeEventListener("mousedown", fn);
+  }, []);
+
+  if (!app) return null;
+  const { barberia, sucursales, sucursalId, setSucursalId, rol, setRol } = app;
+  const rolInfo = ROLES.find((r) => r[0] === rol) || ROLES[0];
+
+  const nav = NAV.filter(
+    (n) => !(n.soloAdmin && rol !== "admin") && !(n.noBarbero && rol === "barbero")
+  );
 
   return (
     <div className="shell">
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-icon">✂</div>
-          <div>
-            <h1>BarberOS</h1>
-            <p>SaaS Barberías</p>
+          <div className="brand-icon">
+            {barberia.logo ? <img src={barberia.logo} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 16 }} /> : <Scissors />}
           </div>
+          <h1>{barberia.nombre}</h1>
         </div>
+
         <nav className="nav">
-          {nav.map((n) => (
-            <Link key={n.href} href={n.href} className={path === n.href ? "on" : ""}>
-              <span>{n.icon}</span> {n.label}
-            </Link>
-          ))}
+          {nav.map(({ href, label, Icon }) => {
+            const on = href === "/" ? path === "/" : path.startsWith(href);
+            return (
+              <Link key={href} href={href} className={on ? "on" : ""}>
+                <Icon /> {label}
+              </Link>
+            );
+          })}
         </nav>
+
         <div className="side-foot">
-          <div className="side-label">BARBERÍA</div>
-          <select value={barberiaId} onChange={(e) => cambiarBarberia(e.target.value)}>
-            {db.barberias.map((b) => (
-              <option key={b.id} value={b.id}>{b.nombre}</option>
-            ))}
-          </select>
-          <select value={sucursalId} onChange={(e) => setSucursalId(e.target.value)}>
+          <select
+            className="side-select"
+            value={sucursalId}
+            onChange={(e) => setSucursalId(e.target.value)}
+            style={{ appearance: "none", WebkitAppearance: "none" }}
+          >
             {sucursales.map((s) => (
               <option key={s.id} value={s.id}>{s.nombre}</option>
             ))}
           </select>
-          <div className="user-row">
-            <div className="avatar">{(ROLES[rol] || "A")[0]}</div>
-            <div className="who">
-              <b>{ROLES[rol]}</b>
-              <span>{barberia?.nombre}</span>
-            </div>
+
+          <div className="usermenu" ref={ref}>
+            {abierto && (
+              <div className="pop">
+                <small>CAMBIAR ROL</small>
+                {ROLES.map(([v, l]) => (
+                  <button key={v} className={rol === v ? "on" : ""} onClick={() => { setRol(v); setAbierto(false); }}>
+                    {l}
+                  </button>
+                ))}
+              </div>
+            )}
+            <button onClick={() => setAbierto((v) => !v)}>
+              <span className="avatar-user" />
+              <span className="who">
+                <b>Nombre Usuario</b>
+                <span>{rolInfo[2]}</span>
+              </span>
+              <ChevronDown style={{ width: 16, height: 16, opacity: 0.6 }} />
+            </button>
           </div>
-          <select value={rol} onChange={(e) => setRol(e.target.value)} title="Cambiar rol (demo)">
-            <option value="admin">Rol: Administrador</option>
-            <option value="recepcion">Rol: Recepción</option>
-            <option value="barbero">Rol: Barbero</option>
-          </select>
+
+          <div className="side-logo">
+            <img src="/barberos-logo.svg" alt="BarberOS" />
+          </div>
         </div>
       </aside>
+
       <main className="content">{children}</main>
     </div>
   );
