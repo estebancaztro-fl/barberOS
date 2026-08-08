@@ -2,7 +2,8 @@
 import { useState } from "react";
 import Shell from "@/components/Shell";
 import Modal from "@/components/Modal";
-import { useApp, uid, hoyISO, finalizarReserva } from "@/lib/store";
+import DetalleReserva from "@/components/DetalleReserva";
+import { useApp, uid, hoyISO } from "@/lib/store";
 import { Plus, ChevronLeft, ChevronRight, Search } from "@/components/Icons";
 
 const HORAS = ["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00"];
@@ -17,6 +18,7 @@ export default function Agenda() {
   const [vista, setVista] = useState("dia");
   const [fecha, setFecha] = useState(hoyISO());
   const [modal, setModal] = useState(null);
+  const [detalle, setDetalle] = useState(null);
   if (!app) return null;
   const { update, reservas, servicios, barberos, clientes, sucursalId, sucursal } = app;
 
@@ -34,11 +36,6 @@ export default function Agenda() {
       return d;
     });
     setModal(null);
-  };
-
-  const cambiarEstado = (r, estado) => {
-    if (estado === "finalizado") return finalizarReserva(update, r);
-    update((d) => { const x = d.reservas.find((y) => y.id === r.id); if (x) x.estado = estado; return d; });
   };
 
   const fechaTxt = cap(new Date(fecha + "T00:00:00").toLocaleDateString("es-CL", { weekday: "long", day: "numeric", month: "long" }));
@@ -77,12 +74,11 @@ export default function Agenda() {
                     const sv = servicios.find((s) => s.id === r.servicioId);
                     const bb = barberos.find((b) => b.id === r.barberoId);
                     return (
-                      <div key={r.id} className={"apt " + r.estado}>
-                        <span>{r.clienteNombre} · {sv?.nombre}{bb ? " · " + bb.nombre : ""}</span>
-                        <select value={r.estado} onChange={(e) => cambiarEstado(r, e.target.value)}>
-                          {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
-                        </select>
-                      </div>
+                      <button key={r.id} className={"apt " + r.estado} onClick={() => setDetalle(r)}>
+                        <span className="apt-txt">{r.clienteNombre} · {sv?.nombre}{bb ? " · " + bb.nombre : ""}</span>
+                        <span className="apt-estado">{r.estado}</span>
+                        <ChevronRight style={{ width: 15, height: 15, opacity: 0.6, flexShrink: 0 }} />
+                      </button>
                     );
                   })}
                   <button className="free" onClick={() => setModal({ hora: h })}>+ reservar</button>
@@ -102,13 +98,18 @@ export default function Agenda() {
                 <h5 suppressHydrationWarning>{new Date(f + "T00:00:00").toLocaleDateString("es-CL", { weekday: "short", day: "numeric" })}</h5>
                 {rs.length === 0 && <div className="muted">—</div>}
                 {[...rs].sort((a, b) => a.hora.localeCompare(b.hora)).map((r) => (
-                  <div key={r.id} className={"mini " + r.estado}>{r.hora} · {r.clienteNombre}</div>
+                  <div key={r.id} className={"mini " + r.estado}
+                    onClick={(e) => { e.stopPropagation(); setDetalle(r); }}>
+                    {r.hora} · {r.clienteNombre}
+                  </div>
                 ))}
               </div>
             );
           })}
         </div>
       )}
+
+      {detalle && <DetalleReserva reserva={detalle} onClose={() => setDetalle(null)} />}
 
       {modal && (
         <NuevaReserva

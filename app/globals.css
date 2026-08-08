@@ -394,14 +394,49 @@ td svg { width: 15px; height: 15px; color: var(--mut); vertical-align: -2px; mar
 .slot .free { background: none; border: 0; color: #a0a0a9; font-size: 15px; padding: 6px; }
 .slot .free:hover { color: var(--ink); }
 .apt {
-  background: #17171a; color: #fff; border-radius: var(--r-sm);
-  padding: 11px 16px; font-size: 14px; font-weight: 600;
-  display: flex; gap: 12px; align-items: center;
+  background: #17171a; color: #fff; border: 0; border-radius: var(--r-sm);
+  padding: 11px 14px 11px 16px; font-size: 14px; font-weight: 600;
+  display: flex; gap: 12px; align-items: center; text-align: left;
+  transition: transform 0.12s;
 }
+.apt:hover { transform: translateY(-1px); }
+.apt:active { transform: scale(0.99); }
 .apt.finalizado { background: linear-gradient(135deg, #14713d, #1c8d4f); }
 .apt.cancelado { background: rgba(23,23,26,0.1); color: #86868e; text-decoration: line-through; }
-.apt select { width: auto; padding: 4px 8px; border-radius: 8px; font-size: 12px; font-weight: 600; background: rgba(255,255,255,0.16); color: inherit; border: 0; }
-.apt.cancelado select { background: rgba(0,0,0,0.06); }
+.apt-txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.apt-estado {
+  background: rgba(255,255,255,0.18); border-radius: 999px;
+  padding: 3px 11px; font-size: 11.5px; font-weight: 700;
+  text-transform: capitalize; flex-shrink: 0; text-decoration: none;
+}
+.apt.cancelado .apt-estado { background: rgba(0,0,0,0.07); }
+.mini { cursor: pointer; }
+.mini:hover { opacity: 0.85; }
+
+/* Detalle de reserva */
+.det-lista { display: flex; flex-direction: column; gap: 2px; }
+.det-fila {
+  display: flex; align-items: center; gap: 13px;
+  padding: 13px 0; border-bottom: 1px solid rgba(23,23,26,0.07);
+  font-size: 15px;
+}
+.det-fila:last-child { border-bottom: 0; }
+.det-fila > svg { width: 18px; height: 18px; color: var(--mut); flex-shrink: 0; }
+.det-fila .grow { flex: 1; min-width: 0; }
+.det-fila b { font-weight: 700; }
+
+.scan-box {
+  margin-top: 22px; padding: 18px;
+  background: linear-gradient(135deg, #f0f7fd, #fdeef0);
+  border-radius: 18px;
+}
+.scan-cab { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.scan-cab b { font-size: 16px; font-weight: 700; }
+.scan-ok {
+  background: #d9f2e4; color: #14713d;
+  border-radius: 12px; padding: 11px 14px; margin-top: 14px;
+  font-size: 13.5px; font-weight: 700;
+}
 .week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; }
 .daycol {
   background: linear-gradient(150deg, rgba(255,255,255,0.94), rgba(250,238,240,0.88));
@@ -755,7 +790,9 @@ td svg { width: 15px; height: 15px; color: var(--mut); vertical-align: -2px; mar
   .slot { min-height: 62px; }
   .slot .h { width: 66px; padding: 18px 12px; font-size: 14px; }
   .slot .body { padding: 10px; }
-  .apt { width: 100%; justify-content: space-between; padding: 12px 14px; font-size: 13.5px; }
+  .apt { width: 100%; padding: 13px 12px 13px 14px; font-size: 13.5px; }
+  .apt-txt { flex: 1; }
+  .scan-cab .btn { width: 100%; }
   .week { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .daycol { min-height: 130px; padding: 13px; }
 

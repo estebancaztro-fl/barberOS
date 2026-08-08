@@ -1,4 +1,18 @@
-# BarberOS — V0.4 (mobile first + análisis de rostro)
+# BarberOS — V0.5 (Visagismo Scan en la agenda)
+
+## Novedades de la V0.5
+
+**El barbero escanea al cliente en el momento de atenderlo.**
+
+1. En su agenda toca la reserva del cliente que va a atender
+2. Se abre el detalle: servicio, duración, barbero, notas y estado
+3. Si el cliente ya tiene visagismo, ve de inmediato su forma de rostro y los cortes recomendados
+4. Botón **Visagismo Scan** → abre la cámara trasera del celular
+5. El resultado se guarda solo en la ficha del cliente
+
+Si el cliente no estaba registrado (reserva a nombre suelto), al guardar el análisis se **crea su ficha automáticamente** y queda enlazada a la reserva.
+
+El estado de la reserva también se cambia desde ahí, con botones grandes en vez del selector chico de antes. Las reservas del Dashboard se abren igual, para que recepción también pueda escanear.
 
 ## Novedades de la V0.4
 

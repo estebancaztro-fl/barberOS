@@ -1,9 +1,10 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Shell from "@/components/Shell";
+import DetalleReserva from "@/components/DetalleReserva";
 import { useApp, fmt, hoyISO } from "@/lib/store";
-import { Money } from "@/components/Icons";
+import { Money, ChevronRight } from "@/components/Icons";
 
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -11,6 +12,7 @@ export default function Dashboard() {
   const app = useApp();
   const router = useRouter();
   const rol = app?.rol;
+  const [detalle, setDetalle] = useState(null);
 
   /* El barbero entra directo a su agenda */
   useEffect(() => {
@@ -68,13 +70,14 @@ export default function Dashboard() {
                 const sv = servicios.find((s) => s.id === r.servicioId);
                 const bb = barberos.find((b) => b.id === r.barberoId);
                 return (
-                  <div className="listrow" key={r.id}>
+                  <div className="listrow" key={r.id} onClick={() => setDetalle(r)} style={{ cursor: "pointer" }}>
                     <b style={{ fontSize: 15, minWidth: 52 }}>{r.hora}</b>
                     <div className="grow">
                       <h4>{r.clienteNombre}</h4>
                       <div className="mut">{sv?.nombre}{bb ? " · " + bb.nombre : ""}</div>
                     </div>
                     <span className="badge grey">{r.estado}</span>
+                    <ChevronRight style={{ width: 16, height: 16, color: "var(--mut)" }} />
                   </div>
                 );
               })}
@@ -112,6 +115,8 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {detalle && <DetalleReserva reserva={detalle} onClose={() => setDetalle(null)} />}
     </Shell>
   );
 }

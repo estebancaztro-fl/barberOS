@@ -25,7 +25,7 @@ function obtenerDetector() {
   return detectorPromise;
 }
 
-export default function AnalisisRostro({ onClose, onUsar, nombreCliente }) {
+export default function AnalisisRostro({ onClose, onUsar, nombreCliente, titulo = "Análisis de rostro", textoGuardar = "Guardar en la ficha" }) {
   const [estado, setEstado] = useState("inicio"); // inicio | cargando | listo | error
   const [error, setError] = useState("");
   const [res, setRes] = useState(null);
@@ -108,7 +108,7 @@ export default function AnalisisRostro({ onClose, onUsar, nombreCliente }) {
 
   return (
     <Modal
-      title="Análisis de rostro"
+      title={titulo}
       sub={nombreCliente}
       onClose={onClose}
       ancho={640}
@@ -116,7 +116,7 @@ export default function AnalisisRostro({ onClose, onUsar, nombreCliente }) {
         estado === "listo" ? (
           <>
             <button className="link-btn" onClick={reiniciar}>Repetir</button>
-            <button className="btn dark" onClick={() => onUsar(res)}>Guardar en la ficha</button>
+            <button className="btn dark" onClick={() => onUsar(res)}>{textoGuardar}</button>
           </>
         ) : (
           <button className="link-btn" onClick={onClose}>Cerrar</button>
@@ -129,8 +129,8 @@ export default function AnalisisRostro({ onClose, onUsar, nombreCliente }) {
             <label className="upload" style={{ cursor: "pointer", padding: "26px 16px", flexDirection: "column", gap: 8 }}>
               <ImgIcon style={{ width: 28, height: 28 }} />
               <b style={{ color: "var(--ink)", fontSize: 16 }}>Tomar foto</b>
-              <span style={{ fontSize: 13 }}>De frente, mirando a la cámara</span>
-              <input type="file" accept="image/*" capture="user" style={{ display: "none" }}
+              <span style={{ fontSize: 13 }}>El cliente de frente, mirando a la cámara</span>
+              <input type="file" accept="image/*" capture="environment" style={{ display: "none" }}
                 onChange={(e) => procesar(e.target.files?.[0])} />
             </label>
             <label className="upload" style={{ cursor: "pointer" }}>
