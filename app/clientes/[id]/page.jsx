@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Shell from "@/components/Shell";
 import AnalisisRostro from "@/components/AnalisisRostro";
+import { VisorFoto } from "@/components/DetalleReserva";
 import { useApp, proximaVisita, INTERVALO_SUGERIDO } from "@/lib/store";
 import { FORMAS } from "@/lib/rostro";
 import { ChevronLeft, Phone, Mail, Mic, ImgIcon, Clock, Scissors, Note, Save, BarberPole, X } from "@/components/Icons";
@@ -18,6 +19,7 @@ export default function FichaCliente() {
   const [form, setForm] = useState(null);
   const [guardado, setGuardado] = useState(false);
   const [analizando, setAnalizando] = useState(false);
+  const [foto, setFoto] = useState(null);
 
   const cliente = app?.clientes.find((c) => c.id === id);
 
@@ -188,6 +190,8 @@ export default function FichaCliente() {
         />
       )}
 
+      {foto && <VisorFoto src={foto} onClose={() => setFoto(null)} />}
+
       <div className="card dark">
         <h3 style={{ fontSize: 21, fontWeight: 700, marginBottom: 20 }}>Historial de cortes</h3>
         {historial.length === 0 ? (
@@ -199,7 +203,10 @@ export default function FichaCliente() {
               const bb = equipo.find((b) => b.id === r.barberoId);
               return (
                 <div className="corte" key={r.id}>
-                  <div className="ph">{r.foto ? <img src={r.foto} alt="" /> : <ImgIcon />}</div>
+                  <div className="ph" onClick={() => r.foto && setFoto(r.foto)}
+                    style={r.foto ? { cursor: "zoom-in" } : undefined}>
+                    {r.foto ? <img src={r.foto} alt="Resultado del corte" /> : <ImgIcon />}
+                  </div>
                   <div className="meta">
                     <Clock style={{ width: 14, height: 14, color: "#a9a9b4" }} />
                     <b>{sv?.nombre || "Servicio"}</b>

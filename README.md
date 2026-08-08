@@ -1,4 +1,21 @@
-# BarberOS — V0.5 (Visagismo Scan en la agenda)
+# BarberOS — V0.6 (foto del resultado)
+
+> **Nota de despliegue**: las V0.4 y V0.5 fallaron en Vercel porque `package.json`
+> pedía `@mediapipe/tasks-vision@0.10.22`, una versión que no existe, y `npm install`
+> abortaba el build. Corregido: MediaPipe ya no es dependencia npm, se carga desde
+> CDN al abrir la pantalla de análisis. El proyecto vuelve a tener solo Next y React
+> como dependencias, igual que la V0.3 que sí desplegaba.
+
+## Novedades de la V0.6
+
+**Foto del corte terminado.** En el detalle de la reserva, el barbero saca una foto del resultado y queda en el historial del cliente. Al marcar el servicio como finalizado, la app se la recuerda.
+
+- Las fotos se **comprimen antes de guardar**: de ~670 KB a ~45 KB (15 veces menos) redimensionando a 900 px y bajando la calidad. Sin esto, tres fotos llenarían el almacenamiento.
+- Se corrige la **orientación** automáticamente (las fotos de celular suelen venir rotadas).
+- Tocar una foto la abre a **pantalla completa**, tanto en el detalle como en el historial de la ficha.
+- Se puede cambiar o quitar la foto.
+
+**Límite a tener en cuenta**: en esta versión las fotos viven en el navegador, que aguanta unos 5 MB — entre **67 y 88 fotos** según cuánta textura tengan. Al llenarse, la app avisa en vez de fallar en silencio. Este límite desaparece en la V1 con almacenamiento real.
 
 ## Novedades de la V0.5
 

@@ -4,22 +4,58 @@ import Modal from "@/components/Modal";
 import { analizar, PUNTOS } from "@/lib/rostro";
 import { Upload, ImgIcon, Scissors, X } from "@/components/Icons";
 
-const WASM = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm";
+/**
+ * MediaPipe se carga desde CDN en tiempo de ejecución, no como dependencia npm.
+ * Así el despliegue nunca puede romperse por esta librería: si el CDN falla,
+ * solo esta pantalla muestra un error en vez de caerse el sitio completo.
+ */
+const VER = "0.10.35";
+const BASE = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${VER}`;
+const FUENTES = [
+  `${BASE}/vision_bundle.mjs`,
+  BASE,
+  `https://unpkg.com/@mediapipe/tasks-vision@${VER}/vision_bundle.mjs`,
+];
+const WASM = `${BASE}/wasm`;
 const MODELO =
   "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
 
-/* El detector se carga una sola vez por sesión */
+/* Prueba las fuentes en orden hasta que una cargue */
+async function cargarLibreria() {
+  let ultimo;
+  for (const url of FUENTES) {
+    try {
+      const mod = await import(/* webpackIgnore: true */ url);
+      if (mod?.FilesetResolver && mod?.FaceLandmarker) return mod;
+      ultimo = new Error("módulo incompleto");
+    } catch (e) {
+      ultimo = e;
+    }
+  }
+  throw ultimo || new Error("no se pudo cargar MediaPipe");
+}
+
+/* El detector se crea una sola vez por sesión */
 let detectorPromise = null;
 function obtenerDetector() {
   if (!detectorPromise) {
     detectorPromise = (async () => {
-      const vision = await import("@mediapipe/tasks-vision");
+      const vision = await cargarLibreria();
       const fileset = await vision.FilesetResolver.forVisionTasks(WASM);
-      return vision.FaceLandmarker.createFromOptions(fileset, {
-        baseOptions: { modelAssetPath: MODELO, delegate: "GPU" },
-        runningMode: "IMAGE",
-        numFaces: 1,
-      });
+      try {
+        return await vision.FaceLandmarker.createFromOptions(fileset, {
+          baseOptions: { modelAssetPath: MODELO, delegate: "GPU" },
+          runningMode: "IMAGE",
+          numFaces: 1,
+        });
+      } catch {
+        /* Algunos equipos no soportan GPU: se reintenta por CPU */
+        return vision.FaceLandmarker.createFromOptions(fileset, {
+          baseOptions: { modelAssetPath: MODELO, delegate: "CPU" },
+          runningMode: "IMAGE",
+          numFaces: 1,
+        });
+      }
     })().catch((e) => { detectorPromise = null; throw e; });
   }
   return detectorPromise;

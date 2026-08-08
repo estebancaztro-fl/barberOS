@@ -73,6 +73,7 @@ export function DataProvider({ children }) {
   const [ready, setReady] = useState(false);
   const [sucursalId, setSucursalId] = useState("s1");
   const [rol, setRol] = useState("admin"); // admin | recepcion | barbero
+  const [sinEspacio, setSinEspacio] = useState(false);
 
   useEffect(() => {
     try {
@@ -88,13 +89,22 @@ export function DataProvider({ children }) {
     setReady(true);
   }, []);
 
-  useEffect(() => { if (ready) localStorage.setItem(KEY, JSON.stringify(db)); }, [db, ready]);
+  useEffect(() => {
+    if (!ready) return;
+    try {
+      localStorage.setItem(KEY, JSON.stringify(db));
+      setSinEspacio(false);
+    } catch {
+      /* Se llenó el almacenamiento del navegador (normalmente por las fotos) */
+      setSinEspacio(true);
+    }
+  }, [db, ready]);
   useEffect(() => { if (ready) localStorage.setItem(CTX, JSON.stringify({ sucursalId, rol })); }, [sucursalId, rol, ready]);
 
   const update = (fn) => setDb((prev) => fn(JSON.parse(JSON.stringify(prev))));
 
   const value = {
-    db, update, ready, rol, setRol, sucursalId, setSucursalId,
+    db, update, ready, rol, setRol, sucursalId, setSucursalId, sinEspacio,
     barberia: db.barberia,
     sucursales: db.sucursales,
     sucursal: db.sucursales.find((s) => s.id === sucursalId) || db.sucursales[0],
