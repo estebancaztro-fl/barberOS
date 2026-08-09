@@ -57,7 +57,7 @@ export default function Clientes() {
             {lista.map((c) => (
               <tr key={c.id} onClick={() => router.push(`/clientes/${c.id}`)} style={{ cursor: "pointer" }}>
                 <td data-label="CLIENTE">
-                  <b style={{ fontWeight: 700 }}>{c.nombre}</b>
+                  <b style={{ fontWeight: 600 }}>{c.nombre}</b>
                   {c.vip && <span className="solo-movil"><BarberPole size={20} /></span>}
                 </td>
                 <td data-label="TELÉFONO"><span><Phone />{c.telefono || "—"}</span></td>

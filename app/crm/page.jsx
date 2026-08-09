@@ -90,7 +90,7 @@ export default function CRM() {
                     const d = proximaVisita(c);
                     return (
                       <tr key={c.id}>
-                        <td data-label="CLIENTE"><Link href={`/clientes/${c.id}`}><b style={{ fontWeight: 700 }}>{c.nombre}</b></Link></td>
+                        <td data-label="CLIENTE"><Link href={`/clientes/${c.id}`}><b style={{ fontWeight: 600 }}>{c.nombre}</b></Link></td>
                         <td data-label="TELÉFONO"><span><Phone />{c.telefono || "—"}</span></td>
                         <td data-label="CORREO"><span><Mail />{c.correo || "—"}</span></td>
                         <td data-label="PRÓXIMA VISITA" style={{ textAlign: "right", color: d > 0 ? "var(--accent)" : "var(--red)", fontWeight: 600 }}>
@@ -140,7 +140,7 @@ export default function CRM() {
                     style={{
                       background: canal === id ? tint : "rgba(255,255,255,0.75)",
                       border: canal === id ? `1.5px solid ${color}40` : "1.5px solid rgba(23,23,26,0.08)",
-                      borderRadius: 14, padding: "18px 8px",
+                      borderRadius: 10, padding: "18px 8px",
                       display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
                       fontSize: 14, fontWeight: 600, color: canal === id ? color : "#4a4a52",
                     }}>
@@ -171,7 +171,7 @@ export default function CRM() {
                 <p className="muted" style={{ marginBottom: 12 }}>
                   {CANALES.find((c) => c.id === prev.canal)?.label} · {SEGS.find((s) => s.id === prev.seg)?.label} · {prev.destinos.length} destinatario(s)
                 </p>
-                <div style={{ background: "rgba(255,255,255,0.85)", borderRadius: 14, padding: 18, whiteSpace: "pre-wrap", fontSize: 15 }}>
+                <div style={{ background: "rgba(255,255,255,0.85)", borderRadius: 10, padding: 18, whiteSpace: "pre-wrap", fontSize: 15 }}>
                   {prev.msg}
                 </div>
                 {prev.destinos.length > 0 && (
@@ -184,7 +184,7 @@ export default function CRM() {
               </>
             )}
             <div style={{ marginTop: "auto", paddingTop: 20, display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 14 }}>
-              {enviada && <span className="muted" style={{ color: "var(--green)", fontWeight: 700 }}>Campaña preparada ✓</span>}
+              {enviada && <span className="muted" style={{ color: "var(--green)", fontWeight: 600 }}>Campaña preparada ✓</span>}
               <button className="btn dark" disabled={!prev} onClick={enviar}><Send /> Enviar</button>
             </div>
             <p className="muted" style={{ marginTop: 10, fontSize: 12.5, textAlign: "right" }}>

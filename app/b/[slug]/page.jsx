@@ -69,7 +69,7 @@ export default function ReservaPublica() {
     <div className="pub-head">
       <div className="brand-icon">
         {barberia.logo
-          ? <img src={barberia.logo} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 16 }} />
+          ? <img src={barberia.logo} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 18 }} />
           : <Scissors />}
       </div>
       <div><h1>{barberia.nombre}</h1><p>Reserva tu hora</p></div>

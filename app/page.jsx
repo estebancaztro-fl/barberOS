@@ -89,7 +89,7 @@ export default function Dashboard() {
           <div className="card white" style={{ display: "flex", alignItems: "center", gap: 18, background: "linear-gradient(140deg,#fff,#f4f9fe)" }}>
             <Money style={{ width: 34, height: 34, color: "#c9a227", flexShrink: 0 }} />
             <div style={{ marginLeft: "auto", textAlign: "right" }}>
-              <b style={{ fontSize: 32, fontWeight: 800, letterSpacing: "-1px", display: "block" }}>{fmt(ingresosMes)}</b>
+              <b style={{ fontSize: 32, fontWeight: 600, letterSpacing: "-1px", display: "block" }}>{fmt(ingresosMes)}</b>
               <span style={{ color: "#5f5f68", fontSize: 15 }}>Ingresos mes</span>
             </div>
           </div>

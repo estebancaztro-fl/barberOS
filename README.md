@@ -1,4 +1,34 @@
-# BarberOS — V0.6 (foto del resultado)
+# BarberOS — V0.7 (ajustes desde Figma)
+
+Cambios traídos del sistema de diseño en Figma:
+
+**Tipografía más liviana en los titulares**
+
+| Estilo | Antes | Ahora |
+|---|---|---|
+| Título/Página (38px) | ExtraBold 800 | Medium 500 |
+| Título/Cifra (34px) | ExtraBold 800 | SemiBold 600 |
+| Título/Tarjeta (17px) | Bold 700 | SemiBold 600 |
+| Cuerpo/Fuerte (15px) | Bold 700 | SemiBold 600 |
+
+Título/Sección (23px Bold) se mantiene.
+
+**Escala de radios reducida a cuatro valores**
+
+Se eliminaron `radio/xl` (22px) y `radio/2xl` (26px). Todo se colapsó a:
+
+| Token | Valor | Dónde |
+|---|---|---|
+| `--r-xs` | 5px | detalles y miniaturas |
+| `--r-sm` | 10px | botones, campos, chips cuadrados |
+| `--r` | 18px | tarjetas, modales, hojas |
+| `--r-full` | 999px | chips e insignias |
+
+Las tarjetas bajaron de 22 a 18px y los modales de 26 a 18px, así que la interfaz quedó menos redondeada. Los valores sueltos que había (11, 12, 14, 16, 20, 26) se ajustaron al escalón más cercano.
+
+La escala vive en `:root` de `app/globals.css` y está sincronizada con la colección **Radio** del archivo de Figma.
+
+# V0.6 (foto del resultado)
 
 > **Nota de despliegue**: las V0.4 y V0.5 fallaron en Vercel porque `package.json`
 > pedía `@mediapipe/tasks-vision@0.10.22`, una versión que no existe, y `npm install`

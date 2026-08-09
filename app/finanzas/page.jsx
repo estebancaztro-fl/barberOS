@@ -52,7 +52,7 @@ export default function Finanzas() {
         <div><h2>Finanzas</h2><div className="sub">Solo Administrador</div></div>
         <div className="mes-picker">
           <input type="month" value={mes} onChange={(e) => setMes(e.target.value)}
-            style={{ background: "#17171a", color: "#fff", border: 0, fontWeight: 700, padding: "14px 20px", colorScheme: "dark", boxShadow: "0 0 0 1.5px rgba(238,141,150,0.5), 0 0 0 3px rgba(130,182,222,0.3)" }} />
+            style={{ background: "#17171a", color: "#fff", border: 0, fontWeight: 600, padding: "14px 20px", colorScheme: "dark", boxShadow: "0 0 0 1.5px rgba(238,141,150,0.5), 0 0 0 3px rgba(130,182,222,0.3)" }} />
         </div>
       </div>
 
@@ -134,7 +134,7 @@ export default function Finanzas() {
         <div className="listcard">
           {comisiones.map(({ b, ing, calc, pagado, pendiente }) => (
             <div className="listrow com-row" key={b.id} style={{ gap: 22, flexWrap: "wrap" }}>
-              <b className="com-nom" style={{ minWidth: 140, fontWeight: 700 }}>{b.nombre}</b>
+              <b className="com-nom" style={{ minWidth: 140, fontWeight: 600 }}>{b.nombre}</b>
               <span className="muted">ingresos: <b style={{ color: "var(--ink)" }}>{fmt(ing)}</b></span>
               <span className="muted">{b.comision}%</span>
               <span className="muted">Calc: <b style={{ color: "var(--ink)" }}>{fmt(calc)}</b></span>
@@ -232,11 +232,11 @@ function PagarModal({ info, mes, onClose, onSave }) {
 function Box({ label, valor, alerta }) {
   return (
     <div style={{
-      borderRadius: 14, padding: "16px 12px", textAlign: "center",
+      borderRadius: 10, padding: "16px 12px", textAlign: "center",
       background: alerta ? "#fdeaea" : "#f4f5f7",
     }}>
       <small style={{ display: "block", fontSize: 13, marginBottom: 5, color: alerta ? "var(--red)" : "var(--mut)", fontWeight: 600 }}>{label}</small>
-      <b style={{ fontSize: 19, fontWeight: 800, color: alerta ? "var(--red)" : "var(--ink)" }}>{valor}</b>
+      <b style={{ fontSize: 19, fontWeight: 600, color: alerta ? "var(--red)" : "var(--ink)" }}>{valor}</b>
     </div>
   );
 }

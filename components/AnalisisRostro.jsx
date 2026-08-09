@@ -203,16 +203,16 @@ export default function AnalisisRostro({ onClose, onUsar, nombreCliente, titulo 
       {estado === "listo" && res && (
         <>
           <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
-            <canvas ref={canvasRef} style={{ maxWidth: "100%", borderRadius: 16, display: "block" }} />
+            <canvas ref={canvasRef} style={{ maxWidth: "100%", borderRadius: 18, display: "block" }} />
           </div>
 
           <div className="res-cab">
             <div>
               <div className="muted" style={{ fontSize: 13 }}>Forma detectada</div>
-              <b style={{ fontSize: 27, fontWeight: 800, letterSpacing: "-0.5px" }}>{res.forma}</b>
+              <b style={{ fontSize: 27, fontWeight: 600, letterSpacing: "-0.5px" }}>{res.forma}</b>
             </div>
             <div style={{ textAlign: "right" }}>
-              <b style={{ fontSize: 27, fontWeight: 800 }}>{res.ranking[0].similitud}%</b>
+              <b style={{ fontSize: 27, fontWeight: 600 }}>{res.ranking[0].similitud}%</b>
               <div className={"conf conf-" + res.confianza}>coincidencia {res.confianza}</div>
             </div>
           </div>

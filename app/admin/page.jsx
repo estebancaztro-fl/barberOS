@@ -104,7 +104,7 @@ export default function Admin() {
                   <h4>{s.nombre}</h4>
                   <div className="mut">{s.duracion} min</div>
                 </div>
-                <b style={{ fontSize: 17, fontWeight: 700 }}>{fmt(s.precio)}</b>
+                <b style={{ fontSize: 17, fontWeight: 600 }}>{fmt(s.precio)}</b>
                 <button className="icon-btn" onClick={() => setModal({ t: "servicio", item: s })}><Pencil /></button>
                 <button className="icon-btn red" onClick={() => del("servicios", s.id)}><Trash /></button>
               </div>
@@ -124,7 +124,7 @@ export default function Admin() {
           <div className="stack">
             {sucursales.map((s) => (
               <div className="rowline" key={s.id}>
-                <div style={{ width: 46, height: 46, borderRadius: 12, background: "#17171a", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <div style={{ width: 46, height: 46, borderRadius: 10, background: "#17171a", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <Building style={{ width: 22, height: 22 }} />
                 </div>
                 <div className="grow">
