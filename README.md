@@ -1,4 +1,15 @@
-# BarberOS — V0.9 (el consejo queda como constancia)
+# BarberOS — V0.10 (link con el nombre y logo eliminable)
+
+- El **link de reservas toma el nombre de la barbería**: si la llamas "Barbería Ñuñoa",
+  el link pasa a ser `/b/barberia-nunoa`. Quita tildes, la ñ y los símbolos raros.
+- Los **links anteriores siguen funcionando**. Al cambiar el nombre, la dirección vieja
+  queda guardada y sigue abriendo la página de reservas, así los QR ya impresos y los
+  mensajes ya enviados no se rompen. En Admin se ven cuáles siguen vivos.
+- La **dirección se puede editar a mano** si prefieres una distinta del nombre.
+- El **logo se puede eliminar**, no solo cambiar: botón en la esquina de la miniatura
+  y otro debajo.
+
+# V0.9 (el consejo queda como constancia)
 
 El resumen de visagismo ahora se **guarda como copia fija** en la ficha del cliente, no se
 recalcula cada vez. Queda registro de lo que efectivamente se le dijo a ese cliente y cuándo.

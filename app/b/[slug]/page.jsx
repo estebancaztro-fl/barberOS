@@ -15,7 +15,12 @@ export default function ReservaPublica() {
   const { db, update } = app;
   const { barberia } = db;
 
-  if (barberia.slug !== slug) {
+  /* Acepta también las direcciones anteriores: los QR y links ya repartidos
+     no dejan de funcionar cuando la barbería cambia de nombre. */
+  const reconocido =
+    barberia.slug === slug || (barberia.slugsAnteriores || []).includes(slug);
+
+  if (!reconocido) {
     return <div className="pub"><div className="empty">Barbería no encontrada.</div></div>;
   }
 

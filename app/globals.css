@@ -712,6 +712,41 @@ td svg { width: 15px; height: 15px; color: var(--mut); vertical-align: -2px; mar
 .card.dark .section-head { border-color: rgba(255,255,255,0.1); }
 .copyrow { display: flex; gap: 12px; }
 .copyrow input { flex: 1; background: rgba(255,255,255,0.7); }
+
+/* Logo de la barbería */
+.logo-caja {
+  position: relative; width: 124px; height: 124px; flex-shrink: 0;
+  border-radius: 18px; background: rgba(255,255,255,0.7);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.logo-caja img { width: 100%; height: 100%; object-fit: cover; }
+.logo-quitar {
+  position: absolute; top: 7px; right: 7px;
+  width: 28px; height: 28px; border-radius: 50%; border: 0;
+  background: rgba(23,23,26,0.72); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+}
+.logo-quitar svg { width: 15px; height: 15px; }
+.logo-quitar:hover { background: var(--red); }
+
+/* Dirección del link público */
+.slugrow {
+  display: flex; align-items: center;
+  border: 1px solid rgba(23,23,26,0.12); border-radius: var(--r-sm);
+  background: #fff; overflow: hidden;
+}
+.slugrow:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(22,122,175,0.12); }
+.slugrow-pre { padding: 0 4px 0 16px; color: var(--mut); font-weight: 600; flex-shrink: 0; }
+.slugrow input { border: 0; padding-left: 0; }
+.slugrow input:focus { box-shadow: none; border: 0; }
+
+.slug-viejos {
+  background: rgba(255,255,255,0.7); border-radius: 12px;
+  padding: 13px 16px; margin-top: 12px; font-size: 13px;
+}
+.slug-viejos b { display: block; font-weight: 600; margin-bottom: 4px; }
+.slug-viejos span { display: block; color: var(--mut); word-break: break-all; }
+.slug-viejos small { display: block; color: var(--mut); margin-top: 6px; font-size: 12px; }
 .hr { border: 0; border-top: 1px dashed rgba(23,23,26,0.15); margin: 26px 0; }
 
 /* ================= Móvil ================= */

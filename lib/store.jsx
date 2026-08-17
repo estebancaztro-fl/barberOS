@@ -15,8 +15,26 @@ const daysAhead = (n) => daysAgo(-n);
 
 export const INTERVALO_SUGERIDO = 21; // días entre cortes
 
+/**
+ * Convierte el nombre de la barbería en dirección para el link público.
+ * "Barbería Ñuñoa & Co." → "barberia-nunoa-co"
+ */
+export function aSlug(texto) {
+  return (texto || "")
+    .normalize("NFD").replace(/[̀-ͯ]/g, "") // quita tildes
+    .replace(/ñ/gi, "n")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60) || "barberia";
+}
+
 const seed = {
-  barberia: { id: "b1", nombre: "Barber Royce", slug: "barber-royce", logo: null },
+  barberia: {
+    id: "b1", nombre: "Barber Royce", slug: "barber-royce", logo: null,
+    /* Direcciones que tuvo antes: los links y QR ya repartidos siguen funcionando */
+    slugsAnteriores: [],
+  },
   sucursales: [
     { id: "s1", nombre: "Sucursal principal", direccion: "Av. Providencia 1234", telefono: "+56 2 2334 4556", activa: true },
     { id: "s2", nombre: "Sucursal Ñuñoa", direccion: "Irarrázaval 890", telefono: "+56 2 2555 7788", activa: true },

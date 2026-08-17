@@ -11,6 +11,8 @@ create table barberias (
   id          uuid primary key default gen_random_uuid(),
   nombre      text not null,
   slug        text not null unique,
+  -- Direcciones anteriores: los QR y links ya repartidos siguen funcionando
+  slugs_anteriores text[] not null default '{}',
   logo_url    text,
   -- Datos del responsable, exigidos por la Ley 21.719
   razon_social      text,

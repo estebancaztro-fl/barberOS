@@ -2,8 +2,8 @@
 import { useState, useEffect } from "react";
 import Shell from "@/components/Shell";
 import Modal, { Toggle } from "@/components/Modal";
-import { useApp, uid, fmt } from "@/lib/store";
-import { Plus, Pencil, Trash, Upload, Save, MapPin, Phone, Building, ImgIcon, Copy } from "@/components/Icons";
+import { useApp, uid, fmt, aSlug } from "@/lib/store";
+import { Plus, Pencil, Trash, Upload, Save, MapPin, Phone, Building, ImgIcon, Copy, X } from "@/components/Icons";
 
 const ROLES = [["barbero", "Barbero"], ["recepcion", "Recepción"], ["admin", "Admin"]];
 const rolTxt = (r) => ROLES.find((x) => x[0] === r)?.[1] || r;
@@ -48,7 +48,37 @@ export default function Admin() {
     const rd = new FileReader();
     rd.onload = () => update((d) => { d.barberia.logo = rd.result; return d; });
     rd.readAsDataURL(file);
+    e.target.value = "";   // permite volver a subir el mismo archivo
   };
+
+  const quitarLogo = () => update((d) => { d.barberia.logo = null; return d; });
+
+  /* Al cambiar el nombre, la dirección del link se regenera sola.
+     La anterior se guarda para que los QR ya repartidos sigan sirviendo. */
+  const cambiarNombre = (nombre) =>
+    update((d) => {
+      const nuevo = aSlug(nombre);
+      if (d.barberia.slug !== nuevo) {
+        d.barberia.slugsAnteriores = [
+          ...new Set([...(d.barberia.slugsAnteriores || []), d.barberia.slug]),
+        ].filter((s) => s && s !== nuevo);
+        d.barberia.slug = nuevo;
+      }
+      d.barberia.nombre = nombre;
+      return d;
+    });
+
+  const cambiarSlug = (valor) =>
+    update((d) => {
+      const nuevo = aSlug(valor);
+      if (d.barberia.slug !== nuevo) {
+        d.barberia.slugsAnteriores = [
+          ...new Set([...(d.barberia.slugsAnteriores || []), d.barberia.slug]),
+        ].filter((s) => s && s !== nuevo);
+        d.barberia.slug = nuevo;
+      }
+      return d;
+    });
 
   return (
     <Shell>
@@ -146,34 +176,65 @@ export default function Admin() {
 
       {tab === "barberia" && (
         <div className="card" style={{ maxWidth: 720, padding: 32 }}>
-          <div style={{ display: "flex", gap: 20, alignItems: "center", marginBottom: 26 }}>
-            <div style={{ width: 124, height: 124, borderRadius: 18, background: "rgba(255,255,255,0.7)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+          <div style={{ display: "flex", gap: 20, alignItems: "center", marginBottom: 26, flexWrap: "wrap" }}>
+            <div className="logo-caja">
               {barberia.logo
-                ? <img src={barberia.logo} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ? <img src={barberia.logo} alt="Logo de la barbería" />
                 : <ImgIcon style={{ width: 44, height: 44, color: "#17171a" }} />}
+              {barberia.logo && (
+                <button className="logo-quitar" onClick={quitarLogo} aria-label="Eliminar logo" title="Eliminar logo">
+                  <X />
+                </button>
+              )}
             </div>
-            <label className="upload" style={{ width: "auto", padding: "16px 26px", cursor: "pointer" }}>
-              <Upload /> Subir imagen
-              <input type="file" accept="image/*" onChange={subirLogo} style={{ display: "none" }} />
-            </label>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <label className="upload" style={{ width: "auto", padding: "16px 26px", cursor: "pointer" }}>
+                <Upload /> {barberia.logo ? "Cambiar imagen" : "Subir imagen"}
+                <input type="file" accept="image/*" onChange={subirLogo} style={{ display: "none" }} />
+              </label>
+              {barberia.logo && (
+                <button className="btn sm" onClick={quitarLogo} style={{ color: "var(--red)" }}>
+                  <Trash style={{ width: 15, height: 15 }} /> Eliminar imagen
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="field">
             <label>Nombre de tu barbería</label>
-            <input value={barberia.nombre}
-              onChange={(e) => update((d) => { d.barberia.nombre = e.target.value; return d; })} />
+            <input value={barberia.nombre} onChange={(e) => cambiarNombre(e.target.value)} />
           </div>
           <button className="btn dark"><Save /> Guardar cambios</button>
 
           <hr className="hr" />
 
-          <div className="field" style={{ marginBottom: 0 }}>
+          <div className="field">
             <label>Link de reservas</label>
             <div className="copyrow">
               <input readOnly value={link} />
               <button className="btn glow" onClick={copiar}><Copy /> {copiado ? "¡Copiado!" : "Copiar"}</button>
             </div>
             <p className="muted" style={{ marginTop: 10 }}>Compártelo con tus clientes para que agenden solos.</p>
+          </div>
+
+          <div className="field" style={{ marginBottom: 0 }}>
+            <label>Dirección del link</label>
+            <div className="slugrow">
+              <span className="slugrow-pre">/b/</span>
+              <input value={barberia.slug} onChange={(e) => cambiarSlug(e.target.value)} />
+            </div>
+            <p className="muted" style={{ marginTop: 8 }}>
+              Se genera sola con el nombre de tu barbería. Puedes editarla si prefieres otra.
+            </p>
+            {(barberia.slugsAnteriores || []).length > 0 && (
+              <div className="slug-viejos">
+                <b>Los links anteriores siguen funcionando</b>
+                <span>
+                  {barberia.slugsAnteriores.map((s) => "/b/" + s).join(" · ")}
+                </span>
+                <small>Así los QR y mensajes que ya repartiste no se rompen al cambiar el nombre.</small>
+              </div>
+            )}
           </div>
         </div>
       )}
