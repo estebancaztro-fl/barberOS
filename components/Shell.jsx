@@ -40,9 +40,11 @@ export default function Shell({ children }) {
 
   if (!app) return null;
   const { barberia, sucursales, sucursalId, setSucursalId, sucursal, rol, setRol,
-          barberos, usuarioId, setUsuarioId, yo } = app;
+          barberos, usuarioId, setUsuarioId, yo, conSesion, sesion } = app;
   const rolInfo = ROLES.find((r) => r[0] === rol) || ROLES[0];
-  const nombreUsuario = rol === "barbero" ? (yo?.nombre || "Barbero") : rolInfo[1];
+  const nombreUsuario = conSesion
+    ? yo.nombre
+    : (rol === "barbero" ? (yo?.nombre || "Barbero") : rolInfo[1]);
 
   const nav = NAV.filter(
     (n) => !(n.soloAdmin && rol !== "admin") && !(n.noBarbero && rol === "barbero")
@@ -86,17 +88,26 @@ export default function Shell({ children }) {
           <div className="usermenu" ref={ref}>
             {rolAbierto && (
               <div className="pop">
-                <small>CAMBIAR ROL</small>
-                {ROLES.map(([v, l]) => (
-                  <button key={v} className={rol === v ? "on" : ""} onClick={() => { setRol(v); setRolAbierto(false); }}>{l}</button>
-                ))}
-                {rol === "barbero" && barberos.length > 0 && (
+                {conSesion ? (
                   <>
-                    <small style={{ marginTop: 8 }}>QUIÉN ERES</small>
-                    {barberos.map((b) => (
-                      <button key={b.id} className={usuarioId === b.id ? "on" : ""}
-                        onClick={() => { setUsuarioId(b.id); setRolAbierto(false); }}>{b.nombre}</button>
+                    <small>SESIÓN</small>
+                    <button onClick={sesion.salir}>Cerrar sesión</button>
+                  </>
+                ) : (
+                  <>
+                    <small>CAMBIAR ROL</small>
+                    {ROLES.map(([v, l]) => (
+                      <button key={v} className={rol === v ? "on" : ""} onClick={() => { setRol(v); setRolAbierto(false); }}>{l}</button>
                     ))}
+                    {rol === "barbero" && barberos.length > 0 && (
+                      <>
+                        <small style={{ marginTop: 8 }}>QUIÉN ERES</small>
+                        {barberos.map((b) => (
+                          <button key={b.id} className={usuarioId === b.id ? "on" : ""}
+                            onClick={() => { setUsuarioId(b.id); setRolAbierto(false); }}>{b.nombre}</button>
+                        ))}
+                      </>
+                    )}
                   </>
                 )}
               </div>
@@ -167,25 +178,40 @@ export default function Shell({ children }) {
               </select>
             </div>
 
-            <div className="sheet-sec">
-              <small>ROL</small>
-              <div className="chips">
-                {ROLES.map(([v, l]) => (
-                  <button key={v} className={"chip" + (rol === v ? " on" : "")} onClick={() => setRol(v)}>{l}</button>
-                ))}
-              </div>
-            </div>
-
-            {rol === "barbero" && barberos.length > 0 && (
+            {conSesion ? (
               <div className="sheet-sec">
-                <small>QUIÉN ERES</small>
-                <div className="chips">
-                  {barberos.map((b) => (
-                    <button key={b.id} className={"chip" + (usuarioId === b.id ? " on" : "")}
-                      onClick={() => setUsuarioId(b.id)}>{b.nombre}</button>
-                  ))}
+                <small>SESIÓN</small>
+                <div className="sheet-item" style={{ background: "transparent", padding: "0 0 12px" }}>
+                  <div className="grow">
+                    <b style={{ display: "block" }}>{yo.nombre}</b>
+                    <span className="muted" style={{ fontSize: 13 }}>{rolInfo[1]}</span>
+                  </div>
                 </div>
+                <button className="btn" style={{ width: "100%" }} onClick={sesion.salir}>Cerrar sesión</button>
               </div>
+            ) : (
+              <>
+                <div className="sheet-sec">
+                  <small>ROL</small>
+                  <div className="chips">
+                    {ROLES.map(([v, l]) => (
+                      <button key={v} className={"chip" + (rol === v ? " on" : "")} onClick={() => setRol(v)}>{l}</button>
+                    ))}
+                  </div>
+                </div>
+
+                {rol === "barbero" && barberos.length > 0 && (
+                  <div className="sheet-sec">
+                    <small>QUIÉN ERES</small>
+                    <div className="chips">
+                      {barberos.map((b) => (
+                        <button key={b.id} className={"chip" + (usuarioId === b.id ? " on" : "")}
+                          onClick={() => setUsuarioId(b.id)}>{b.nombre}</button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
             <div className="sheet-logo"><img src="/barberos-logo.svg" alt="BarberOS" /></div>

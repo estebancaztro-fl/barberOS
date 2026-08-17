@@ -1,4 +1,26 @@
-# BarberOS — V0.10 (link con el nombre y logo eliminable)
+# BarberOS — V0.11 (inicio de sesión real)
+
+Primera etapa de la migración a Supabase.
+
+- **Pantalla de inicio de sesión** en `/login`, con correo y contraseña
+- **El rol viene de la base de datos**, no del navegador. Ya no se puede cambiar
+  de rol desde el sidebar cuando hay sesión iniciada
+- **Cerrar sesión** desde el menú de usuario
+- La **página pública de reservas** sigue abierta sin login, como corresponde
+- **Si no configuras las variables de entorno, la app sigue funcionando en modo local**
+  igual que antes: nada se rompe mientras migras
+
+### Variables de entorno
+
+Copia `.env.example` como `.env.local` y llena los dos valores desde
+Supabase → Project Settings → API. En Vercel van en Settings → Environment Variables.
+
+### Lo que todavía NO está migrado
+
+Agenda, clientes, finanzas, CRM y admin siguen guardando en el navegador. Son
+20 operaciones de escritura que se migran módulo por módulo en las próximas etapas.
+
+# V0.10 (link con el nombre y logo eliminable)
 
 - El **link de reservas toma el nombre de la barbería**: si la llamas "Barbería Ñuñoa",
   el link pasa a ser `/b/barberia-nunoa`. Quita tildes, la ñ y los símbolos raros.

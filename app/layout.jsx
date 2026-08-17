@@ -1,5 +1,7 @@
 import "./globals.css";
 import { DataProvider } from "@/lib/store";
+import { SesionProvider } from "@/lib/sesion";
+import Protegido from "@/components/Protegido";
 
 export const metadata = {
   title: "BarberOS · SaaS para barberías",
@@ -17,7 +19,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang="es">
       <body>
-        <DataProvider>{children}</DataProvider>
+        <SesionProvider>
+          <DataProvider>
+            <Protegido>{children}</Protegido>
+          </DataProvider>
+        </SesionProvider>
       </body>
     </html>
   );

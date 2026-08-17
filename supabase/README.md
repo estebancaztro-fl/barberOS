@@ -6,15 +6,40 @@
 2. **New project**. Nombre `barberos`. Región **South America (São Paulo)** — es la más cercana a Chile y mantiene los datos en la región.
 3. Guarda la contraseña de la base en un lugar seguro. No la vas a volver a ver.
 
+### Casillas de Security al crear el proyecto
+
+| Opción | Cómo dejarla | Por qué |
+|---|---|---|
+| Enable Data API | ✅ **marcada** | La app se conecta por ahí |
+| Automatically expose new tables | ⬜ **desmarcada** | Ninguna tabla queda accesible hasta que se otorgue permiso a mano en `005_permisos.sql`. Si algún día creas una tabla y olvidas protegerla, queda invisible en vez de pública |
+| Enable automatic RLS | ✅ **marcada** | Activa protección en toda tabla nueva automáticamente. Es la red contra el error más común: olvidar RLS |
+
 ## 2. Ejecutar las migraciones
 
 En el panel de Supabase, **SQL Editor** → **New query**. Pega y ejecuta **en este orden**, uno a la vez:
 
 1. `migraciones/001_esquema.sql` — tablas
-2. `migraciones/002_rls.sql` — seguridad
+2. `migraciones/002_rls.sql` — seguridad por rol
 3. `migraciones/003_cumplimiento.sql` — Ley 21.719
+4. `migraciones/004_publico.sql` — página pública de reservas
+5. `migraciones/005_permisos.sql` — permisos explícitos
 
 Si alguno falla, detente y avísame. No sigas al siguiente.
+
+**El paso 5 termina mostrando una tabla de resultados: tiene que salir vacía.** Si aparece
+alguna fila, esa tabla quedó accesible para visitantes anónimos.
+
+### Por qué la página pública necesita su propia migración
+
+Quien entra a `/b/tu-barberia` no tiene sesión iniciada, así que las políticas de RLS
+—que dependen del usuario autenticado— le niegan todo. En vez de abrirle las tablas,
+`004_publico.sql` le da **tres funciones controladas**: ver la barbería, consultar horas
+ocupadas y crear una reserva. El rol anónimo nunca toca una tabla directamente, así que
+no puede listar clientes, ver teléfonos ni leer finanzas aunque manipule las peticiones.
+
+Esas funciones además validan que el servicio y la sucursal sean de esa barbería,
+que la hora esté libre, que exista consentimiento, y frenan el abuso con un máximo de
+3 reservas por teléfono al día.
 
 ## 3. Crear tu barbería y tu usuario
 
@@ -46,20 +71,37 @@ Si alguna prueba falla, hay una filtración de datos y no se puede lanzar.
 Prueba adicional, manual: crea una **segunda** barbería con otro usuario, inicia sesión con
 ese usuario en la app y confirma que **no ve ni un solo cliente** de la primera.
 
-## 5. Conectar la app
+## 5. Conectar la app (estado actual: solo el inicio de sesión)
+
+> **Dónde vamos**: el login ya usa Supabase — la identidad, el rol y la barbería
+> salen de la base. El resto de las pantallas (agenda, clientes, finanzas) todavía
+> guardan en el navegador. Se migran módulo por módulo en los siguientes pasos.
+>
+> Mientras no configures las variables de abajo, la app sigue funcionando en modo
+> local como hasta ahora: no se rompe nada.
 
 En Vercel, **Settings → Environment Variables**:
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGc...
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 ```
 
-Ambas están en **Project Settings → API**.
+Ambas están en **Project Settings → API Keys**.
 
-> ⚠️ La clave **`service_role`** NO va acá ni en ningún archivo del repositorio.
-> Salta todas las políticas de seguridad. Si se filtra, cualquiera lee y borra la base completa.
-> Úsala solo en tareas de servidor, guardada como variable de entorno privada.
+| Clave | Empieza con | Dónde va |
+|---|---|---|
+| **Publishable key** | `sb_publishable_` | ✅ En la app. Es la que necesitas |
+| **Secret key** | `sb_secret_` | ❌ Nunca en la app ni en el repositorio |
+
+> ⚠️ La **Secret key** (antes `service_role`) **se salta todas las políticas de seguridad**.
+> Quien la tenga lee y borra la base completa, sin importar el RLS. No la pongas en
+> variables que empiecen con `NEXT_PUBLIC_`, no la subas al repositorio y no la muestres
+> en capturas de pantalla. Si alguna vez se filtra, regenérala de inmediato desde ese
+> mismo panel.
+>
+> La app tiene una protección extra: si detecta que se configuró una clave secreta
+> en el navegador, se niega a conectarse en vez de exponerla.
 
 ## 6. Storage para las fotos
 

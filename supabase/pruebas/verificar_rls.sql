@@ -1,13 +1,16 @@
 -- ============================================================
 -- Prueba de aislamiento: ¿RLS realmente separa las barberías?
 --
--- Crea dos barberías con datos, se hace pasar por un usuario de cada una
+-- Crea dos barberías de prueba con sus usuarios, se hace pasar por cada uno
 -- y comprueba que ninguno vea los datos del otro. Al terminar borra todo.
 --
 -- IMPORTANTE: en el SQL Editor corres como superusuario, y el superusuario
 -- SE SALTA RLS. Por eso el script cambia de rol a 'authenticated' y arranca
 -- con una prueba canario: si esa falla, significa que RLS no se está
 -- aplicando y todo el resto daría un falso OK.
+--
+-- Supabase avisará "Potential issue detected" por las líneas de limpieza.
+-- Es esperado: solo borra lo que el propio script acaba de crear.
 --
 -- Ejecutar completo. Debe imprimir TODO OK.
 -- ============================================================
@@ -23,7 +26,25 @@ declare
   n int;
   fallos int := 0;
 begin
-  -- ---------- Preparar datos (como superusuario) ----------
+  -- ---------- Usuarios de prueba ----------
+  -- perfiles.id apunta a auth.users, así que los usuarios deben existir.
+  -- Nunca inician sesión: son solo para comprobar las políticas.
+  insert into auth.users
+    (instance_id, id, aud, role, email, encrypted_password,
+     email_confirmed_at, created_at, updated_at,
+     raw_app_meta_data, raw_user_meta_data)
+  values
+    ('00000000-0000-0000-0000-000000000000', u1, 'authenticated', 'authenticated',
+     'prueba-a-' || substr(u1::text,1,8) || '@barberos.test', '',
+     now(), now(), now(), '{}'::jsonb, '{}'::jsonb),
+    ('00000000-0000-0000-0000-000000000000', u2, 'authenticated', 'authenticated',
+     'prueba-b-' || substr(u2::text,1,8) || '@barberos.test', '',
+     now(), now(), now(), '{}'::jsonb, '{}'::jsonb),
+    ('00000000-0000-0000-0000-000000000000', u3, 'authenticated', 'authenticated',
+     'prueba-c-' || substr(u3::text,1,8) || '@barberos.test', '',
+     now(), now(), now(), '{}'::jsonb, '{}'::jsonb);
+
+  -- ---------- Dos barberías con datos ----------
   insert into barberias (nombre, slug)
     values ('Prueba A', 'prueba-a-' || substr(u1::text,1,8)) returning id into b1;
   insert into barberias (nombre, slug)
@@ -59,6 +80,7 @@ begin
   if n <> 0 then
     execute 'set local role postgres';
     delete from barberias where id in (b1, b2);
+    delete from auth.users where id in (u1, u2, u3);
     raise exception
       'RLS NO SE ESTÁ APLICANDO: un usuario sin perfil ve % clientes. Revisa que 002_rls.sql se haya ejecutado completo.', n;
   end if;
@@ -129,6 +151,7 @@ begin
   -- ---------- Limpiar y resultado ----------
   execute 'set local role postgres';
   delete from barberias where id in (b1, b2);
+  delete from auth.users where id in (u1, u2, u3);
 
   if fallos = 0 then
     raise notice '=============== TODO OK ===============';
@@ -136,3 +159,8 @@ begin
     raise exception '=============== % FALLAS — NO LANZAR ===============', fallos;
   end if;
 end $$;
+
+-- Comprobar que no quedó basura de la prueba
+select
+  (select count(*) from barberias where slug like 'prueba-%') as barberias_de_prueba,
+  (select count(*) from auth.users where email like '%@barberos.test') as usuarios_de_prueba;
