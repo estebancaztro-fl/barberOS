@@ -5,7 +5,7 @@ import Shell from "@/components/Shell";
 import AnalisisRostro from "@/components/AnalisisRostro";
 import { VisorFoto } from "@/components/DetalleReserva";
 import { useApp, proximaVisita, INTERVALO_SUGERIDO } from "@/lib/store";
-import { FORMAS } from "@/lib/rostro";
+import { FORMAS, registroVisagismo, copiarRecomendacion, estaDesactualizada } from "@/lib/rostro";
 import { ChevronLeft, Phone, Mail, Mic, ImgIcon, Clock, Scissors, Note, Save, BarberPole, X } from "@/components/Icons";
 
 const TIPO_PELO = ["Liso", "Ondulado", "Rulo", "Afro"];
@@ -50,27 +50,49 @@ export default function FichaCliente() {
   const guardar = () => {
     update((d) => {
       const c = d.clientes.find((x) => x.id === id);
-      if (c) Object.assign(c, form);
+      if (!c) return d;
+      Object.assign(c, form);
+      /* Si eligió la forma a mano, también se guarda copia del consejo */
+      if (form.formaRostro && c.visagismo?.forma !== form.formaRostro) {
+        c.visagismo = registroVisagismo({
+          forma: form.formaRostro, origen: "manual", fecha: hoyISO(),
+        });
+      }
+      if (!form.formaRostro) c.visagismo = null;
       return d;
     });
     setGuardado(true);
     setTimeout(() => setGuardado(false), 2000);
   };
 
-  /* Guarda el resultado del análisis. La foto nunca se almacena. */
+  /* Trae la ficha al catálogo vigente, dejando constancia de la fecha */
+  const actualizarRecomendacion = () => {
+    update((d) => {
+      const c = d.clientes.find((x) => x.id === id);
+      if (c?.visagismo) {
+        c.visagismo.recomendacion = copiarRecomendacion(c.visagismo.forma);
+        c.visagismo.actualizada_en = hoyISO();
+      }
+      return d;
+    });
+  };
+
+  /* Guarda el resultado del análisis. La foto nunca se almacena, ni tampoco
+     las proporciones del rostro: son medidas biométricas. Sí queda copia
+     fija de la recomendación dada ese día. */
   const usarAnalisis = (r) => {
     setForm((p) => ({ ...p, formaRostro: r.forma }));
     update((d) => {
       const c = d.clientes.find((x) => x.id === id);
       if (c) {
         c.formaRostro = r.forma;
-        c.analisisRostro = {
+        c.visagismo = registroVisagismo({
           forma: r.forma,
           similitud: r.ranking[0].similitud,
           confianza: r.confianza,
-          proporciones: r.proporciones,
-          fecha: new Date().toISOString().slice(0, 10),
-        };
+          origen: "scan",
+          fecha: hoyISO(),
+        });
       }
       return d;
     });
@@ -79,7 +101,13 @@ export default function FichaCliente() {
     setTimeout(() => setGuardado(false), 2000);
   };
 
-  const reco = form.formaRostro ? FORMAS[form.formaRostro] : null;
+  /* Se muestra la copia guardada, no el catálogo vivo: la ficha conserva
+     lo que se le dijo al cliente. Fichas antiguas sin copia caen al catálogo. */
+  const vis = cliente.visagismo || null;
+  const reco = vis?.forma === form.formaRostro && vis?.recomendacion
+    ? vis.recomendacion
+    : (form.formaRostro ? FORMAS[form.formaRostro] : null);
+  const desactualizada = vis?.forma === form.formaRostro && estaDesactualizada(vis);
 
   const historial = reservas
     .filter((r) => r.clienteId === id && r.estado !== "cancelado")
@@ -128,46 +156,43 @@ export default function FichaCliente() {
           <h3 style={{ fontSize: 21, fontWeight: 700 }}>Notas técnicas y visagismo</h3>
         </div>
 
-        <div className="visagismo">
-          <div>
-            <div style={{ fontSize: 17, fontWeight: 600, marginBottom: 18 }}>Perfil capilar</div>
-            <div className="perfil-grid">
-              <Grupo label="Tipo de pelo" opciones={TIPO_PELO} valor={form.tipoPelo} onPick={(v) => set("tipoPelo", v)} />
-              <Grupo label="Densidad" opciones={DENSIDAD} valor={form.densidad} onPick={(v) => set("densidad", v)} />
-            </div>
-            <div className="opt-group">
-              <div className="lbl" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-                <span>Forma del rostro</span>
-                <button className="btn glow sm" onClick={() => setAnalizando(true)}>
-                  <ImgIcon style={{ width: 15, height: 15 }} /> Analizar con foto
-                </button>
-              </div>
-              <div className="chips">
-                {ROSTRO.map((o) => (
-                  <button key={o} className={"opt" + (form.formaRostro === o ? " on" : "")}
-                    onClick={() => set("formaRostro", form.formaRostro === o ? "" : o)}>{o}</button>
-                ))}
-              </div>
-              {cliente.analisisRostro?.forma === form.formaRostro && (
-                <div className="rostro-res">
-                  <ImgIcon style={{ width: 20, height: 20, flexShrink: 0 }} />
-                  <div className="grow">
-                    <b>{cliente.analisisRostro.forma} · {cliente.analisisRostro.similitud}%</b>
-                    <div className="muted" style={{ fontSize: 12.5 }}>
-                      Analizado el {cliente.analisisRostro.fecha} · coincidencia {cliente.analisisRostro.confianza}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+        {/* El visagismo es lo que más usa el barbero: va primero y completo */}
+        <button className="scan-cta" onClick={() => setAnalizando(true)} style={{ marginBottom: 22 }}>
+          <span className="scan-cta-ico"><ImgIcon /></span>
+          <span className="grow">
+            <b>Visagismo Scan</b>
+            <span>{form.formaRostro ? `${form.formaRostro} · toca para repetir el análisis` : "Analiza el rostro y recibe el corte recomendado"}</span>
+          </span>
+        </button>
 
-          <GrabadorVoz onTexto={(t) => set("observaciones", (form.observaciones ? form.observaciones + " " : "") + t)} />
-        </div>
-
+        {/* El resumen queda guardado en la ficha: es lo que el barbero
+            consulta antes de empezar a cortar. */}
         {reco && (
           <div className="reco-box">
-            <p style={{ lineHeight: 1.6, marginBottom: 16 }}>{reco.resumen}</p>
+            <div className="reco-cab">
+              <b>{form.formaRostro}</b>
+              {vis?.forma === form.formaRostro ? (
+                <span className="muted">
+                  {vis.origen === "scan"
+                    ? `${vis.similitud}% de coincidencia · escaneado el ${vis.fecha}`
+                    : `Definido a mano el ${vis.fecha}`}
+                  {vis.actualizada_en && ` · consejo actualizado el ${vis.actualizada_en}`}
+                </span>
+              ) : (
+                <span className="muted">Sin guardar todavía</span>
+              )}
+            </div>
+
+            {desactualizada && (
+              <div className="reco-aviso">
+                <span className="grow">
+                  Este consejo se dio con una versión anterior del catálogo. Se mantiene tal cual como constancia.
+                </span>
+                <button className="btn sm" onClick={actualizarRecomendacion}>Actualizar</button>
+              </div>
+            )}
+
+            <p style={{ lineHeight: 1.6, margin: "14px 0 18px" }}>{reco.resumen}</p>
             <div className="two-col" style={{ gap: 18 }}>
               <div>
                 <div className="bloque-t"><Scissors style={{ width: 15, height: 15, verticalAlign: -3, marginRight: 7 }} />Cortes que favorecen</div>
@@ -180,6 +205,27 @@ export default function FichaCliente() {
             </div>
           </div>
         )}
+
+        <div className="visagismo">
+          <div>
+            <div style={{ fontSize: 17, fontWeight: 600, marginBottom: 18 }}>Perfil capilar</div>
+            <div className="perfil-grid">
+              <Grupo label="Tipo de pelo" opciones={TIPO_PELO} valor={form.tipoPelo} onPick={(v) => set("tipoPelo", v)} />
+              <Grupo label="Densidad" opciones={DENSIDAD} valor={form.densidad} onPick={(v) => set("densidad", v)} />
+            </div>
+            <div className="opt-group">
+              <div className="lbl">Forma del rostro</div>
+              <div className="chips">
+                {ROSTRO.map((o) => (
+                  <button key={o} className={"opt" + (form.formaRostro === o ? " on" : "")}
+                    onClick={() => set("formaRostro", form.formaRostro === o ? "" : o)}>{o}</button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <GrabadorVoz onTexto={(t) => set("observaciones", (form.observaciones ? form.observaciones + " " : "") + t)} />
+        </div>
       </div>
 
       {analizando && (

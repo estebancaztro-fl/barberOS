@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import Shell from "@/components/Shell";
 import DetalleReserva from "@/components/DetalleReserva";
+import DashboardBarbero from "@/components/DashboardBarbero";
 import { useApp, fmt, hoyISO } from "@/lib/store";
 import { Money, ChevronRight } from "@/components/Icons";
 
@@ -10,17 +10,12 @@ const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export default function Dashboard() {
   const app = useApp();
-  const router = useRouter();
-  const rol = app?.rol;
   const [detalle, setDetalle] = useState(null);
 
-  /* El barbero entra directo a su agenda */
-  useEffect(() => {
-    if (rol === "barbero") router.replace("/agenda");
-  }, [rol, router]);
-
   if (!app) return null;
-  if (rol === "barbero") return null;
+  /* Cada rol tiene su propia pantalla de inicio */
+  if (app.rol === "barbero") return <DashboardBarbero />;
+
   const { sucursal, reservas, ingresos, clientes, barberos, servicios } = app;
 
   const hoy = hoyISO();

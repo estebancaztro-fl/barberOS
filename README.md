@@ -1,4 +1,30 @@
-# BarberOS — V0.7 (ajustes desde Figma)
+# BarberOS — V0.9 (el consejo queda como constancia)
+
+El resumen de visagismo ahora se **guarda como copia fija** en la ficha del cliente, no se
+recalcula cada vez. Queda registro de lo que efectivamente se le dijo a ese cliente y cuándo.
+
+- Se guarda al escanear **y** al elegir la forma a mano; la cabecera distingue ambos casos
+- El bloque subió al inicio de la tarjeta, justo bajo el botón de scan
+- `VERSION_CATALOGO` en `lib/rostro.js` sella cada copia. Al editar los textos de `FORMAS`,
+  sube esa versión: las fichas asesoradas con la versión anterior muestran un aviso y un
+  botón para actualizarlas, en vez de cambiar solas y en silencio
+- Las fichas antiguas sin copia siguen funcionando: caen al catálogo vigente
+
+# V0.8 (feedback de usuarios)
+
+Cambios a partir del testeo con barberos:
+
+**El barbero ahora tiene su propia pantalla de inicio.** Al entrar ve su próximo cliente con el botón de Visagismo Scan al lado, y sus métricas del mes: cortes realizados, dinero generado, su porcentaje de comisión, cuánto lleva pagado y cuánto le queda por cobrar. Antes lo mandaba directo a la agenda; el feedback dijo que necesita autoevaluarse.
+
+**El Visagismo Scan pasó a primer plano.** Es un botón grande y oscuro con halo, lo primero que aparece al abrir una reserva y al abrir la ficha de un cliente. Antes estaba escondido entre los campos del perfil capilar.
+
+**El dictado por voz bajó de jerarquía.** Sigue disponible en la ficha, pero ya no compite visualmente con el visagismo.
+
+**Identidad del barbero.** Para poder mostrarle sus propias métricas, la app necesita saber quién es. Por ahora se elige desde el menú de usuario ("Quién eres"); con Supabase vendrá de la sesión.
+
+> Ver [ARQUITECTURA-V1.md](ARQUITECTURA-V1.md) para el plan de Supabase, cumplimiento de la Ley 21.719 y seguridad.
+
+# V0.7 (ajustes desde Figma)
 
 Cambios traídos del sistema de diseño en Figma:
 

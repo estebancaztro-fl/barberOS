@@ -443,6 +443,43 @@ td svg { width: 15px; height: 15px; color: var(--mut); vertical-align: -2px; mar
   font-size: 13.5px; font-weight: 700;
 }
 
+/* Llamado principal al Visagismo Scan — lo que más usa el barbero */
+.scan-cta {
+  display: flex; align-items: center; gap: 16px; width: 100%; text-align: left;
+  border: 0; border-radius: var(--r); padding: 18px 20px;
+  background: linear-gradient(120deg, #17171a 0%, #292934 100%);
+  color: #fff;
+  box-shadow: 0 0 0 1.5px rgba(238,141,150,0.5), 0 0 0 3px rgba(130,182,222,0.28), 0 6px 20px rgba(23,23,26,0.22);
+  transition: transform 0.12s;
+}
+.scan-cta:active { transform: scale(0.99); }
+.scan-cta .grow { flex: 1; min-width: 0; }
+.scan-cta b { display: block; font-size: 17px; font-weight: 600; }
+.scan-cta span span, .scan-cta .grow > span { display: block; font-size: 13px; color: #b3b3c0; margin-top: 3px; }
+.scan-cta-ico {
+  width: 46px; height: 46px; border-radius: 14px; flex-shrink: 0;
+  background: rgba(255,255,255,0.12);
+  display: flex; align-items: center; justify-content: center;
+}
+.scan-cta-ico svg { width: 22px; height: 22px; }
+
+/* Próximo cliente en el inicio del barbero */
+.proximo {
+  display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+  background: linear-gradient(125deg, rgba(255,255,255,0.95), rgba(250,238,240,0.9));
+  border-radius: var(--r); padding: 20px 24px; margin-bottom: 18px;
+  box-shadow: 0 1px 2px rgba(23,23,26,0.04);
+}
+.proximo-cab { flex: 1; min-width: 0; }
+.proximo-lbl { display: block; font-size: 12.5px; font-weight: 600; color: var(--mut); margin-bottom: 4px; }
+.proximo-cab b { font-size: 21px; font-weight: 600; display: block; }
+.proximo-cab .muted { font-size: 14px; }
+.proximo-btn { flex-shrink: 0; }
+
+/* Barra de avance de pago de comisión */
+.progreso { height: 8px; border-radius: 999px; background: rgba(255,255,255,0.16); overflow: hidden; }
+.progreso div { height: 100%; background: #4ac07f; border-radius: 999px; }
+
 /* Foto del resultado */
 .foto-box {
   margin-top: 18px; padding: 18px;
@@ -595,11 +632,27 @@ td svg { width: 15px; height: 15px; color: var(--mut); vertical-align: -2px; mar
 }
 .rostro-res .grow { flex: 1; min-width: 0; }
 .rostro-res b { font-size: 16px; font-weight: 600; }
+/* Resumen de visagismo guardado en la ficha */
 .reco-box {
-  margin-top: 24px; padding-top: 22px;
-  border-top: 1px solid rgba(23,23,26,0.1);
+  background: linear-gradient(125deg, rgba(255,255,255,0.9), rgba(250,240,242,0.85));
+  border-radius: var(--r);
+  padding: 20px 22px;
+  margin-bottom: 22px;
 }
 .reco-box .lista li { padding-left: 22px; }
+.reco-cab {
+  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+  padding-bottom: 14px; border-bottom: 1px solid rgba(23,23,26,0.09);
+}
+.reco-cab b { font-size: 21px; font-weight: 600; letter-spacing: -0.3px; }
+.reco-cab .muted { font-size: 13px; }
+.reco-aviso {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  background: #fdf4e3; color: #8a5a08;
+  border-radius: 10px; padding: 12px 14px; margin-top: 14px;
+  font-size: 13px; font-weight: 600; line-height: 1.5;
+}
+.reco-aviso .grow { flex: 1; min-width: 200px; }
 
 /* ---------- Reserva pública ---------- */
 .pub { max-width: 660px; margin: 0 auto; padding: 46px 22px 90px; }
@@ -841,6 +894,12 @@ td svg { width: 15px; height: 15px; color: var(--mut); vertical-align: -2px; mar
   .historial { gap: 14px; }
   .corte { width: calc(50% - 7px); }
   .corte .ph { height: 104px; }
+
+  /* Barbero: próximo cliente y visagismo a ancho completo */
+  .proximo { flex-direction: column; align-items: stretch; gap: 14px; padding: 18px; }
+  .proximo-btn { width: 100%; }
+  .scan-cta { padding: 16px; gap: 14px; }
+  .scan-cta b { font-size: 16px; }
 
   /* Agenda: controles */
   .agenda-ctrl { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }

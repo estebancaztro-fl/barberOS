@@ -37,17 +37,17 @@ const seed = {
       id: "c1", nombre: "Ignacio Pérez", telefono: "+56 9 8765 4321", correo: "ignacio@mail.com",
       vip: true, cortes: 1, ultimaVisita: daysAgo(32),
       observaciones: "Prefiere degradado alto. Piel sensible.",
-      tipoPelo: "Ondulado", densidad: "Medio", formaRostro: "Ovalado", notasVoz: [],
+      tipoPelo: "Ondulado", densidad: "Medio", formaRostro: "Ovalado", notasVoz: [], visagismo: null,
     },
     {
       id: "c2", nombre: "Francisca Soto", telefono: "+56 9 7654 3210", correo: "francisca@mail.com",
       vip: false, cortes: 0, ultimaVisita: daysAgo(8),
-      observaciones: "", tipoPelo: "", densidad: "", formaRostro: "", notasVoz: [], analisisRostro: null,
+      observaciones: "", tipoPelo: "", densidad: "", formaRostro: "", notasVoz: [], visagismo: null,
     },
     {
       id: "c3", nombre: "Matías Cifuentes", telefono: "+56 9 6543 2109", correo: "matias@mail.com",
       vip: false, cortes: 1, ultimaVisita: daysAgo(6),
-      observaciones: "", tipoPelo: "Liso", densidad: "Grueso", formaRostro: "Cuadrado", notasVoz: [],
+      observaciones: "", tipoPelo: "Liso", densidad: "Grueso", formaRostro: "Cuadrado", notasVoz: [], visagismo: null,
     },
   ],
   reservas: [
@@ -73,6 +73,9 @@ export function DataProvider({ children }) {
   const [ready, setReady] = useState(false);
   const [sucursalId, setSucursalId] = useState("s1");
   const [rol, setRol] = useState("admin"); // admin | recepcion | barbero
+  /* Quién está usando la app. Provisional hasta que exista login real:
+     con Supabase esto vendrá de la sesión, no de un selector. */
+  const [usuarioId, setUsuarioId] = useState("e1");
   const [sinEspacio, setSinEspacio] = useState(false);
 
   useEffect(() => {
@@ -84,6 +87,7 @@ export function DataProvider({ children }) {
         const o = JSON.parse(c);
         if (o.sucursalId) setSucursalId(o.sucursalId);
         if (o.rol) setRol(o.rol);
+        if (o.usuarioId) setUsuarioId(o.usuarioId);
       }
     } catch {}
     setReady(true);
@@ -99,17 +103,23 @@ export function DataProvider({ children }) {
       setSinEspacio(true);
     }
   }, [db, ready]);
-  useEffect(() => { if (ready) localStorage.setItem(CTX, JSON.stringify({ sucursalId, rol })); }, [sucursalId, rol, ready]);
+  useEffect(() => {
+    if (ready) localStorage.setItem(CTX, JSON.stringify({ sucursalId, rol, usuarioId }));
+  }, [sucursalId, rol, usuarioId, ready]);
 
   const update = (fn) => setDb((prev) => fn(JSON.parse(JSON.stringify(prev))));
 
+  const barberosActivos = db.equipo.filter((e) => e.rol === "barbero" && e.activo);
+  const yo = db.equipo.find((e) => e.id === usuarioId) || barberosActivos[0] || db.equipo[0];
+
   const value = {
     db, update, ready, rol, setRol, sucursalId, setSucursalId, sinEspacio,
+    usuarioId, setUsuarioId, yo,
     barberia: db.barberia,
     sucursales: db.sucursales,
     sucursal: db.sucursales.find((s) => s.id === sucursalId) || db.sucursales[0],
     equipo: db.equipo,
-    barberos: db.equipo.filter((e) => e.rol === "barbero" && e.activo),
+    barberos: barberosActivos,
     servicios: db.servicios,
     clientes: db.clientes,
     reservas: db.reservas,
@@ -136,6 +146,52 @@ export function segmentoDe(cliente) {
 /* Días hasta la próxima visita sugerida (negativo = atrasado) */
 export function proximaVisita(cliente) {
   return INTERVALO_SUGERIDO - diasDesde(cliente.ultimaVisita);
+}
+
+/**
+ * Métricas de un barbero para un mes (formato "2026-08").
+ * Es lo que ve en su propia pantalla de inicio para autoevaluarse.
+ */
+export function metricasBarbero(db, barberoId, mes) {
+  const delMes = (f) => f && f.startsWith(mes);
+  const barbero = db.equipo.find((e) => e.id === barberoId);
+  const tasa = barbero ? barbero.comision || 0 : 0;
+
+  const reservasMes = db.reservas.filter((r) => r.barberoId === barberoId && delMes(r.fecha));
+  const cortes = reservasMes.filter((r) => r.estado === "finalizado").length;
+  const agendados = reservasMes.filter((r) => r.estado === "reservado" || r.estado === "confirmado").length;
+  const cancelados = reservasMes.filter((r) => r.estado === "cancelado").length;
+
+  const ingresos = db.ingresos
+    .filter((i) => i.barberoId === barberoId && delMes(i.fecha))
+    .reduce((a, b) => a + b.monto, 0);
+
+  const comisionCalculada = Math.round((ingresos * tasa) / 100);
+  const pagado = db.pagosComision
+    .filter((p) => p.barberoId === barberoId && p.mes === mes)
+    .reduce((a, b) => a + b.monto, 0);
+  const pendiente = Math.max(0, comisionCalculada - pagado);
+
+  /* Servicio que más repite */
+  const conteo = {};
+  for (const r of reservasMes) {
+    if (r.estado !== "finalizado") continue;
+    conteo[r.servicioId] = (conteo[r.servicioId] || 0) + 1;
+  }
+  const topId = Object.keys(conteo).sort((a, b) => conteo[b] - conteo[a])[0];
+  const topServicio = topId ? db.servicios.find((s) => s.id === topId) : null;
+
+  /* Clientes distintos atendidos */
+  const distintos = new Set(
+    reservasMes.filter((r) => r.estado === "finalizado").map((r) => r.clienteId || r.clienteNombre)
+  ).size;
+
+  return {
+    barbero, tasa, cortes, agendados, cancelados, ingresos,
+    comisionCalculada, pagado, pendiente,
+    ticketPromedio: cortes ? Math.round(ingresos / cortes) : 0,
+    topServicio, clientesDistintos: distintos,
+  };
 }
 
 /* Finalizar reserva: genera ingreso y suma corte al cliente */

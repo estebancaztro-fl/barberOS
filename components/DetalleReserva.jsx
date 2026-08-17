@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import Modal from "@/components/Modal";
 import AnalisisRostro from "@/components/AnalisisRostro";
 import { useApp, uid, fmt, hoyISO, finalizarReserva } from "@/lib/store";
-import { FORMAS } from "@/lib/rostro";
+import { FORMAS, registroVisagismo } from "@/lib/rostro";
 import { comprimirImagen } from "@/lib/imagen";
 import { Scissors, Clock, Note, ImgIcon, X, Trash, Upload } from "@/components/Icons";
 
@@ -30,7 +30,11 @@ export default function DetalleReserva({ reserva, onClose }) {
   const barbero = equipo.find((b) => b.id === r.barberoId);
   const cliente = clientes.find((c) => c.id === r.clienteId);
   const forma = cliente?.formaRostro;
-  const reco = forma ? FORMAS[forma] : null;
+  /* Se muestra la copia guardada en la ficha; si no hay, el catálogo vigente */
+  const vis = cliente?.visagismo;
+  const reco = vis?.forma === forma && vis?.recomendacion
+    ? vis.recomendacion
+    : (forma ? FORMAS[forma] : null);
 
   const cambiarEstado = (e) => {
     if (e === "finalizado") return finalizarReserva(update, r);
@@ -64,27 +68,29 @@ export default function DetalleReserva({ reserva, onClose }) {
 
   /* Guarda el visagismo en la ficha. Si el cliente no estaba registrado, lo crea. */
   const guardarAnalisis = (res) => {
-    const analisis = {
+    /* Solo la categoría y copia fija del consejo dado hoy.
+       Las proporciones del rostro no se almacenan. */
+    const analisis = registroVisagismo({
       forma: res.forma,
       similitud: res.ranking[0].similitud,
       confianza: res.confianza,
-      proporciones: res.proporciones,
+      origen: "scan",
       fecha: hoyISO(),
-    };
+    });
     update((d) => {
       let c = d.clientes.find((x) => x.id === r.clienteId);
       if (!c) {
         c = {
           id: uid(), nombre: r.clienteNombre, telefono: "", correo: "",
           vip: false, cortes: 0, ultimaVisita: hoyISO(),
-          observaciones: "", tipoPelo: "", densidad: "", formaRostro: "", notasVoz: [], analisisRostro: null,
+          observaciones: "", tipoPelo: "", densidad: "", formaRostro: "", notasVoz: [], visagismo: null,
         };
         d.clientes.push(c);
         const res2 = d.reservas.find((x) => x.id === r.id);
         if (res2) res2.clienteId = c.id;
       }
       c.formaRostro = analisis.forma;
-      c.analisisRostro = analisis;
+      c.visagismo = analisis;
       return d;
     });
     setEscaneando(false);
@@ -109,6 +115,15 @@ export default function DetalleReserva({ reserva, onClose }) {
           </>
         }
       >
+        {/* Lo primero al abrir la reserva: el barbero va a cortar ahora */}
+        <button className="scan-cta" onClick={() => setEscaneando(true)}>
+          <span className="scan-cta-ico"><ImgIcon /></span>
+          <span className="grow">
+            <b>Visagismo Scan</b>
+            <span>{forma ? `Última lectura: ${forma} · toca para repetir` : "Analiza el rostro y recibe el corte recomendado"}</span>
+          </span>
+        </button>
+
         <div className="det-lista">
           <div className="det-fila">
             <Scissors />
@@ -188,22 +203,16 @@ export default function DetalleReserva({ reserva, onClose }) {
         </div>
 
         <div className="scan-box">
-          <div className="scan-cab">
-            <div>
-              <b>Visagismo</b>
-              <div className="muted" style={{ fontSize: 13 }}>
-                {forma ? `Última lectura: ${forma}` : "Sin análisis todavía"}
-              </div>
-            </div>
-            <button className="btn glow" onClick={() => setEscaneando(true)}>
-              <ImgIcon style={{ width: 16, height: 16 }} /> {forma ? "Escanear otra vez" : "Visagismo Scan"}
-            </button>
-          </div>
+          {aviso && <div className="scan-ok" style={{ marginTop: 0, marginBottom: reco ? 16 : 0 }}>{aviso}</div>}
 
-          {aviso && <div className="scan-ok">{aviso}</div>}
+          {!reco && !aviso && (
+            <div className="muted" style={{ fontSize: 13.5 }}>
+              Sin visagismo todavía. Escanea al cliente para ver qué cortes le favorecen.
+            </div>
+          )}
 
           {reco && (
-            <div style={{ marginTop: 16 }}>
+            <div>
               <p style={{ fontSize: 14, lineHeight: 1.6, marginBottom: 14 }}>{reco.resumen}</p>
               <div className="bloque-t"><Scissors style={{ width: 15, height: 15, verticalAlign: -3, marginRight: 7 }} />Cortes que favorecen</div>
               <ul className="lista si">{reco.favorece.map((t, i) => <li key={i}>{t}</li>)}</ul>

@@ -6,7 +6,7 @@ import { useApp } from "@/lib/store";
 import { Scissors, Grid, Calendar, Users, Dollar, Chat, Settings, ChevronDown, X } from "@/components/Icons";
 
 const NAV = [
-  { href: "/", label: "Inicio", full: "Dashboard", Icon: Grid, noBarbero: true },
+  { href: "/", label: "Inicio", full: "Dashboard", Icon: Grid },
   { href: "/agenda", label: "Agenda", full: "Agenda", Icon: Calendar },
   { href: "/clientes", label: "Clientes", full: "Clientes", Icon: Users },
   { href: "/finanzas", label: "Finanzas", full: "Finanzas", Icon: Dollar, soloAdmin: true },
@@ -39,8 +39,10 @@ export default function Shell({ children }) {
   useEffect(() => { setMasAbierto(false); }, [path]);
 
   if (!app) return null;
-  const { barberia, sucursales, sucursalId, setSucursalId, sucursal, rol, setRol } = app;
+  const { barberia, sucursales, sucursalId, setSucursalId, sucursal, rol, setRol,
+          barberos, usuarioId, setUsuarioId, yo } = app;
   const rolInfo = ROLES.find((r) => r[0] === rol) || ROLES[0];
+  const nombreUsuario = rol === "barbero" ? (yo?.nombre || "Barbero") : rolInfo[1];
 
   const nav = NAV.filter(
     (n) => !(n.soloAdmin && rol !== "admin") && !(n.noBarbero && rol === "barbero")
@@ -88,11 +90,20 @@ export default function Shell({ children }) {
                 {ROLES.map(([v, l]) => (
                   <button key={v} className={rol === v ? "on" : ""} onClick={() => { setRol(v); setRolAbierto(false); }}>{l}</button>
                 ))}
+                {rol === "barbero" && barberos.length > 0 && (
+                  <>
+                    <small style={{ marginTop: 8 }}>QUIÉN ERES</small>
+                    {barberos.map((b) => (
+                      <button key={b.id} className={usuarioId === b.id ? "on" : ""}
+                        onClick={() => { setUsuarioId(b.id); setRolAbierto(false); }}>{b.nombre}</button>
+                    ))}
+                  </>
+                )}
               </div>
             )}
             <button onClick={() => setRolAbierto((v) => !v)}>
               <span className="avatar-user" />
-              <span className="who"><b>Nombre Usuario</b><span>{rolInfo[2]}</span></span>
+              <span className="who"><b>{nombreUsuario}</b><span>{rolInfo[2]}</span></span>
               <ChevronDown style={{ width: 16, height: 16, opacity: 0.6 }} />
             </button>
           </div>
@@ -164,6 +175,18 @@ export default function Shell({ children }) {
                 ))}
               </div>
             </div>
+
+            {rol === "barbero" && barberos.length > 0 && (
+              <div className="sheet-sec">
+                <small>QUIÉN ERES</small>
+                <div className="chips">
+                  {barberos.map((b) => (
+                    <button key={b.id} className={"chip" + (usuarioId === b.id ? " on" : "")}
+                      onClick={() => setUsuarioId(b.id)}>{b.nombre}</button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="sheet-logo"><img src="/barberos-logo.svg" alt="BarberOS" /></div>
           </div>
