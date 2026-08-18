@@ -19,11 +19,15 @@ export default function Protegido({ children }) {
   const router = useRouter();
   const abierta = esAbierta(ruta || "");
 
+  const enCambioClave = ruta === "/cambiar-clave";
+
   useEffect(() => {
     if (!ses || ses.cargando || abierta) return;
     if (!ses.haySupabase) return;          // sin conexión configurada, no redirige
-    if (!ses.autenticado) router.replace("/login");
-  }, [ses, ses?.cargando, ses?.autenticado, abierta, router]);
+    if (!ses.autenticado) { router.replace("/login"); return; }
+    /* Con clave temporal no se entra a ninguna pantalla hasta cambiarla */
+    if (ses.debeCambiarClave && !enCambioClave) router.replace("/cambiar-clave");
+  }, [ses, ses?.cargando, ses?.autenticado, ses?.debeCambiarClave, abierta, enCambioClave, router]);
 
   if (!ses) return null;
   if (abierta) return children;
@@ -53,6 +57,8 @@ export default function Protegido({ children }) {
     }
     return null;   // redirigiendo al login
   }
+
+  if (ses.debeCambiarClave && !enCambioClave) return null;   // redirigiendo
 
   return children;
 }

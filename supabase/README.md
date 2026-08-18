@@ -23,6 +23,7 @@ En el panel de Supabase, **SQL Editor** → **New query**. Pega y ejecuta **en e
 3. `migraciones/003_cumplimiento.sql` — Ley 21.719
 4. `migraciones/004_publico.sql` — página pública de reservas
 5. `migraciones/005_permisos.sql` — permisos explícitos
+6. `migraciones/006_cuentas.sql` — cuentas del equipo y corrección de privilegios
 
 Si alguno falla, detente y avísame. No sigas al siguiente.
 
@@ -67,6 +68,10 @@ values (
 
 En SQL Editor, ejecuta el archivo `pruebas/verificar_rls.sql`. Debe imprimir `TODO OK`.
 Si alguna prueba falla, hay una filtración de datos y no se puede lanzar.
+
+Corre también `pruebas/verificar_privilegios.sql`. Comprueba que **un barbero no pueda
+ascenderse a administrador** ni subirse la comisión, y que la barbería no pueda quedarse
+sin administradores. También debe imprimir `TODO OK`.
 
 Prueba adicional, manual: crea una **segunda** barbería con otro usuario, inicia sesión con
 ese usuario en la app y confirma que **no ve ni un solo cliente** de la primera.

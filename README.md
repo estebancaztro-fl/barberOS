@@ -1,4 +1,32 @@
-# BarberOS — V0.11 (inicio de sesión real)
+# BarberOS — V0.12 (cuentas del equipo)
+
+**Cómo entra un barbero.** El dueño lo crea desde Admin → Equipo con su correo. El sistema
+genera una **clave temporal legible** (tipo `tijera-corte-4821`) que se muestra **una sola vez**
+y se puede copiar para mandar por WhatsApp. Al primer ingreso, la app **obliga** a cambiarla
+por una propia que nadie más conoce.
+
+- **Restablecer clave**: botón 🔑 en cada miembro, para el "se me olvidó" del sábado
+- **Desactivar en vez de eliminar**: deja de poder entrar, pero sus cortes y comisiones
+  se conservan en las finanzas de meses anteriores
+- No se puede dejar la barbería **sin ningún administrador activo**
+
+### Corrección de seguridad importante
+
+La política que dejaba a cada usuario editar su propio perfil también le permitía
+**cambiarse el rol y la comisión**: un barbero podía ponerse `admin` y ver todas las
+finanzas. Corregido en `006_cuentas.sql`:
+
+- Se eliminó esa política; ahora hay una función que solo toca nombre y teléfono
+- Un disparador impide que **cualquiera** cambie su propio rol o comisión, incluido el dueño
+- No se puede mover un perfil a otra barbería
+- `pruebas/verificar_privilegios.sql` intenta todos esos ataques y debe fallar en todos
+
+### Variable nueva
+
+`SUPABASE_SECRET_KEY` (sin `NEXT_PUBLIC_`) — necesaria para crear cuentas. Va **solo**
+en el servidor; Next se niega a incluirla en el paquete del navegador.
+
+# V0.11 (inicio de sesión real)
 
 Primera etapa de la migración a Supabase.
 

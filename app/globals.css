@@ -673,6 +673,19 @@ td svg { width: 15px; height: 15px; color: var(--mut); vertical-align: -2px; mar
 .login-marca .brand-icon svg { width: 26px; height: 26px; }
 .login-marca h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.4px; }
 .login-marca p { color: var(--mut); font-size: 14px; }
+.clave-caja {
+  background: linear-gradient(135deg, #17171a, #292934);
+  color: #fff; border-radius: var(--r);
+  padding: 22px; text-align: center;
+}
+.clave-caja small { display: block; font-size: 11px; letter-spacing: 1.2px; color: #9c9ca8; margin-bottom: 10px; }
+.clave-caja b {
+  display: block; font-size: 26px; font-weight: 600; letter-spacing: 0.5px;
+  font-family: var(--font-mono, ui-monospace, "SF Mono", Menlo, monospace);
+  word-break: break-all;
+}
+.clave-caja span { display: block; color: #9c9ca8; font-size: 13px; margin-top: 10px; }
+
 .login-error {
   background: #fdeaea; color: #a32828;
   border-radius: 10px; padding: 12px 14px; margin-bottom: 16px;

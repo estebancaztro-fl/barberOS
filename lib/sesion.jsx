@@ -21,7 +21,7 @@ export function SesionProvider({ children }) {
     if (!uid) { setPerfil(null); return; }
     const { data, error } = await supabase
       .from("perfiles")
-      .select("id, nombre, rol, comision, activo, barberia_id, barberias(id, nombre, slug, logo_url, slugs_anteriores)")
+      .select("id, nombre, correo, telefono, rol, comision, activo, debe_cambiar_clave, barberia_id, barberias(id, nombre, slug, logo_url, slugs_anteriores)")
       .eq("id", uid)
       .single();
 
@@ -75,7 +75,9 @@ export function SesionProvider({ children }) {
 
   const valor = {
     cargando, usuario, perfil, error, entrar, salir, haySupabase,
+    recargarPerfil: () => cargarPerfil(usuario?.id),
     autenticado: Boolean(usuario && perfil),
+    debeCambiarClave: Boolean(perfil?.debe_cambiar_clave),
     rol: perfil?.rol ?? null,
     barberia: perfil?.barberias ?? null,
   };

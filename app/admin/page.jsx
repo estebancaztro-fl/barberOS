@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Shell from "@/components/Shell";
 import Modal, { Toggle } from "@/components/Modal";
 import { useApp, uid, fmt, aSlug } from "@/lib/store";
+import { CrearCuenta, RestablecerClave } from "@/components/CuentaEquipo";
 import { Plus, Pencil, Trash, Upload, Save, MapPin, Phone, Building, ImgIcon, Copy, X } from "@/components/Icons";
 
 const ROLES = [["barbero", "Barbero"], ["recepcion", "Recepción"], ["admin", "Admin"]];
@@ -16,7 +17,7 @@ export default function Admin() {
   const [origin, setOrigin] = useState("");
   useEffect(() => setOrigin(window.location.origin), []);
   if (!app) return null;
-  const { rol, equipo, servicios, sucursales, barberia, update } = app;
+  const { rol, equipo, servicios, sucursales, barberia, update, conSesion, yo } = app;
 
   if (rol === "barbero") {
     return (
@@ -96,26 +97,47 @@ export default function Admin() {
         <>
           <div className="toolbar">
             <span className="muted">{equipo.length} miembros del equipo</span>
-            <button className="btn dark" onClick={() => setModal({ t: "miembro", item: { nombre: "", correo: "", telefono: "", rol: "barbero", comision: 40, activo: true } })}>
+            <button className="btn dark" onClick={() => setModal(
+              conSesion
+                ? { t: "cuenta" }
+                : { t: "miembro", item: { nombre: "", correo: "", telefono: "", rol: "barbero", comision: 40, activo: true } }
+            )}>
               <Plus /> Nuevo
             </button>
           </div>
           <div className="stack">
-            {equipo.map((m) => (
-              <div className="rowline" key={m.id}>
-                <div className="avatar" style={{ background: "#17171a" }} />
-                <div className="grow">
-                  <h4>{m.nombre}</h4>
-                  <div className="mut">{m.telefono && <span><Phone style={{ verticalAlign: -2 }} /> {m.telefono}</span>}{m.correo && <span>✉ {m.correo}</span>}</div>
+            {equipo.map((m) => {
+              const soyYo = conSesion && m.id === yo.id;
+              return (
+                <div className="rowline" key={m.id} style={m.activo ? undefined : { opacity: 0.6 }}>
+                  <div className="avatar" style={{ background: "#17171a" }}>{m.nombre.charAt(0)}</div>
+                  <div className="grow">
+                    <h4>{m.nombre}{soyYo && <span className="badge grey" style={{ marginLeft: 8 }}>Tú</span>}</h4>
+                    <div className="mut">
+                      {m.telefono && <span><Phone style={{ verticalAlign: -2 }} /> {m.telefono}</span>}
+                      {m.correo && <span>✉ {m.correo}</span>}
+                      {m.debe_cambiar_clave && <span style={{ color: "var(--amber)" }}>Clave temporal sin usar</span>}
+                    </div>
+                  </div>
+                  <span className="badge">{rolTxt(m.rol)}</span>
+                  <span className="muted">Comisión: <b style={{ color: "var(--ink)" }}>{m.comision}%</b></span>
+                  <span className="muted">Activo:</span>
+                  <Toggle on={m.activo} onChange={(v) => save("equipo", { ...m, activo: v })} />
+                  {conSesion && !soyYo && (
+                    <button className="icon-btn" title="Restablecer clave"
+                      onClick={() => setModal({ t: "clave", item: m })}>🔑</button>
+                  )}
+                  <button className="icon-btn" onClick={() => setModal({ t: "miembro", item: m })}><Pencil /></button>
                 </div>
-                <span className="badge">{rolTxt(m.rol)}</span>
-                <span className="muted">Comisión: <b style={{ color: "var(--ink)" }}>{m.comision}%</b></span>
-                <span className="muted">Activo:</span>
-                <Toggle on={m.activo} onChange={(v) => save("equipo", { ...m, activo: v })} />
-                <button className="icon-btn" onClick={() => setModal({ t: "miembro", item: m })}><Pencil /></button>
-              </div>
-            ))}
+              );
+            })}
           </div>
+          {conSesion && (
+            <p className="muted" style={{ marginTop: 14, fontSize: 13 }}>
+              Al desactivar a alguien deja de poder entrar, pero sus cortes y comisiones
+              anteriores se conservan en las finanzas.
+            </p>
+          )}
         </>
       )}
 
@@ -239,6 +261,8 @@ export default function Admin() {
         </div>
       )}
 
+      {modal?.t === "cuenta" && <CrearCuenta onClose={() => setModal(null)} />}
+      {modal?.t === "clave" && <RestablecerClave miembro={modal.item} onClose={() => setModal(null)} />}
       {modal?.t === "miembro" && <MiembroModal item={modal.item} onClose={() => setModal(null)} onSave={(it) => save("equipo", it)} />}
       {modal?.t === "servicio" && <ServicioModal item={modal.item} onClose={() => setModal(null)} onSave={(it) => save("servicios", { ...it, duracion: Number(it.duracion) || 0, precio: Number(it.precio) || 0 })} />}
       {modal?.t === "sucursal" && <SucursalModal item={modal.item} onClose={() => setModal(null)} onSave={(it) => save("sucursales", it)} />}
