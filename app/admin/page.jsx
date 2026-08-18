@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import Shell from "@/components/Shell";
 import Modal, { Toggle } from "@/components/Modal";
 import { useApp, uid, fmt, aSlug } from "@/lib/store";
-import { guardarMiembro } from "@/lib/datos";
+import { guardarMiembro, guardarBarberia } from "@/lib/datos";
+import { comprimirImagen } from "@/lib/imagen";
 import { CrearCuenta, RestablecerClave } from "@/components/CuentaEquipo";
 import { Plus, Pencil, Trash, Upload, Save, MapPin, Phone, Building, ImgIcon, Copy, X } from "@/components/Icons";
 
@@ -16,6 +17,9 @@ export default function Admin() {
   const [modal, setModal] = useState(null);
   const [copiado, setCopiado] = useState(false);
   const [errorEquipo, setErrorEquipo] = useState("");
+  const [errorBarberia, setErrorBarberia] = useState("");
+  const [nombreTmp, setNombreTmp] = useState(null);
+  const [slugTmp, setSlugTmp] = useState(null);
   const [origin, setOrigin] = useState("");
   useEffect(() => setOrigin(window.location.origin), []);
   if (!app) return null;
@@ -55,43 +59,63 @@ export default function Admin() {
     try { await navigator.clipboard.writeText(link); setCopiado(true); setTimeout(() => setCopiado(false), 1600); } catch {}
   };
 
-  const subirLogo = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const rd = new FileReader();
-    rd.onload = () => update((d) => { d.barberia.logo = rd.result; return d; });
-    rd.readAsDataURL(file);
-    e.target.value = "";   // permite volver a subir el mismo archivo
+  /* Guarda en la base si hay sesión; si no, en el navegador */
+  const aplicarBarberia = async (cambiosLocal, cambiosBase) => {
+    if (!conSesion) { update((d) => { Object.assign(d.barberia, cambiosLocal); return d; }); return; }
+    const r = await guardarBarberia(barberia.id, cambiosBase);
+    if (r.error) { setErrorBarberia(r.error); setTimeout(() => setErrorBarberia(""), 5000); return; }
+    setErrorBarberia("");
+    await app.sesion?.recargarPerfil?.();
   };
 
-  const quitarLogo = () => update((d) => { d.barberia.logo = null; return d; });
+  const subirLogo = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";   // permite volver a subir el mismo archivo
+    if (!file) return;
+    /* Se achica bastante: el logo va en una fila de la base, no en Storage */
+    const dataUrl = await comprimirImagen(file, 320, 0.8);
+    await aplicarBarberia({ logo: dataUrl }, { logo_url: dataUrl });
+  };
+
+  const quitarLogo = () => aplicarBarberia({ logo: null }, { logo_url: null });
 
   /* Al cambiar el nombre, la dirección del link se regenera sola.
-     La anterior se guarda para que los QR ya repartidos sigan sirviendo. */
-  const cambiarNombre = (nombre) =>
-    update((d) => {
-      const nuevo = aSlug(nombre);
-      if (d.barberia.slug !== nuevo) {
-        d.barberia.slugsAnteriores = [
-          ...new Set([...(d.barberia.slugsAnteriores || []), d.barberia.slug]),
-        ].filter((s) => s && s !== nuevo);
-        d.barberia.slug = nuevo;
-      }
-      d.barberia.nombre = nombre;
-      return d;
-    });
+     La anterior se guarda para que los QR ya repartidos sigan sirviendo.
+     Con sesión se escribe al salir del campo, no en cada tecla. */
+  const nuevoSlug = (actual, anteriores, propuesto) => {
+    const nuevo = aSlug(propuesto);
+    if (actual === nuevo) return null;
+    return {
+      slug: nuevo,
+      slugs_anteriores: [...new Set([...(anteriores || []), actual])].filter((s) => s && s !== nuevo),
+    };
+  };
 
-  const cambiarSlug = (valor) =>
-    update((d) => {
-      const nuevo = aSlug(valor);
-      if (d.barberia.slug !== nuevo) {
-        d.barberia.slugsAnteriores = [
-          ...new Set([...(d.barberia.slugsAnteriores || []), d.barberia.slug]),
-        ].filter((s) => s && s !== nuevo);
-        d.barberia.slug = nuevo;
-      }
-      return d;
-    });
+  const cambiarNombre = (nombre) => {
+    setNombreTmp(nombre);
+    if (!conSesion) update((d) => { d.barberia.nombre = nombre; return d; });
+  };
+
+  const confirmarNombre = async () => {
+    const nombre = (nombreTmp ?? barberia.nombre).trim();
+    if (!nombre || nombre === barberia.nombre) { setNombreTmp(null); return; }
+    const cambio = nuevoSlug(barberia.slug, barberia.slugsAnteriores, nombre);
+    await aplicarBarberia(
+      { nombre, ...(cambio ? { slug: cambio.slug, slugsAnteriores: cambio.slugs_anteriores } : {}) },
+      { nombre, ...(cambio || {}) }
+    );
+    setNombreTmp(null);
+  };
+
+  const confirmarSlug = async (valor) => {
+    const cambio = nuevoSlug(barberia.slug, barberia.slugsAnteriores, valor);
+    setSlugTmp(null);
+    if (!cambio) return;
+    await aplicarBarberia(
+      { slug: cambio.slug, slugsAnteriores: cambio.slugs_anteriores },
+      cambio
+    );
+  };
 
   return (
     <Shell>
@@ -237,9 +261,13 @@ export default function Admin() {
 
           <div className="field">
             <label>Nombre de tu barbería</label>
-            <input value={barberia.nombre} onChange={(e) => cambiarNombre(e.target.value)} />
+            <input value={nombreTmp ?? barberia.nombre}
+              onChange={(e) => cambiarNombre(e.target.value)}
+              onBlur={confirmarNombre}
+              onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()} />
           </div>
-          <button className="btn dark"><Save /> Guardar cambios</button>
+          <button className="btn dark" onClick={confirmarNombre}><Save /> Guardar cambios</button>
+          {errorBarberia && <div className="login-error" style={{ marginTop: 14 }}>{errorBarberia}</div>}
 
           <hr className="hr" />
 
@@ -256,7 +284,10 @@ export default function Admin() {
             <label>Dirección del link</label>
             <div className="slugrow">
               <span className="slugrow-pre">/b/</span>
-              <input value={barberia.slug} onChange={(e) => cambiarSlug(e.target.value)} />
+              <input value={slugTmp ?? barberia.slug}
+                onChange={(e) => setSlugTmp(e.target.value)}
+                onBlur={(e) => confirmarSlug(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()} />
             </div>
             <p className="muted" style={{ marginTop: 8 }}>
               Se genera sola con el nombre de tu barbería. Puedes editarla si prefieres otra.

@@ -673,6 +673,18 @@ td svg { width: 15px; height: 15px; color: var(--mut); vertical-align: -2px; mar
 .login-marca .brand-icon svg { width: 26px; height: 26px; }
 .login-marca h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.4px; }
 .login-marca p { color: var(--mut); font-size: 14px; }
+/* Consentimiento en la reserva pública */
+.consentimiento {
+  display: flex; gap: 12px; align-items: flex-start;
+  background: rgba(255,255,255,0.8);
+  border-radius: var(--r-sm); padding: 15px 16px; margin-top: 18px;
+  font-size: 13.5px; line-height: 1.55; cursor: pointer;
+}
+.consentimiento input {
+  width: 20px; height: 20px; flex-shrink: 0; margin-top: 1px;
+  accent-color: var(--accent);
+}
+
 .clave-caja {
   background: linear-gradient(135deg, #17171a, #292934);
   color: #fff; border-radius: var(--r);

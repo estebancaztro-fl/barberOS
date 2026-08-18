@@ -1,4 +1,20 @@
-# BarberOS — V0.13 (arreglo del visagismo + revisor)
+# BarberOS — V0.14 (reservas públicas y barbería en la base)
+
+**Corregido**: el link de reservas daba "Barbería no encontrada". La página pública
+seguía leyendo del navegador, donde la barbería tenía otro nombre que el de la base.
+
+- La página pública ahora usa las **funciones seguras** `publico_barberia`,
+  `publico_horas_ocupadas` y `publico_reservar`. El visitante nunca toca una tabla:
+  no puede listar clientes ni ver teléfonos aunque manipule las peticiones
+- **Casilla de consentimiento obligatoria** antes de reservar, como exige la Ley 21.719.
+  La base rechaza la reserva si no viene marcada
+- Las **horas ocupadas se consultan de verdad**, así dos personas no pueden tomar
+  la misma hora desde dos teléfonos
+- **Nombre, link y logo de la barbería se guardan en la base**. Antes se perdían al
+  recargar. El nombre se guarda al salir del campo o con Enter, no en cada tecla
+- El **logo se comprime a 320px** antes de guardarlo
+
+# V0.13 (arreglo del visagismo + revisor)
 
 **Corregido**: guardar el visagismo tumbaba la app con "Application error". La ficha
 usaba `hoyISO()` sin haberlo importado — un error que **no aparece al compilar**,

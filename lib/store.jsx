@@ -160,7 +160,14 @@ export function DataProvider({ children }) {
     rol: rolEfectivo, setRol, conSesion, sesion: ses,
     usuarioId, setUsuarioId, yo, recargarEquipo,
     barberia: conSesion && ses.barberia
-      ? { ...db.barberia, nombre: ses.barberia.nombre, slug: ses.barberia.slug }
+      ? {
+          ...db.barberia,
+          id: ses.barberia.id,
+          nombre: ses.barberia.nombre,
+          slug: ses.barberia.slug,
+          logo: ses.barberia.logo_url || null,
+          slugsAnteriores: ses.barberia.slugs_anteriores || [],
+        }
       : db.barberia,
     sucursales: db.sucursales,
     sucursal: db.sucursales.find((s) => s.id === sucursalId) || db.sucursales[0],
