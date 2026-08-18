@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Shell from "@/components/Shell";
 import Modal, { Toggle } from "@/components/Modal";
 import { useApp, uid, fmt, aSlug } from "@/lib/store";
+import { guardarMiembro } from "@/lib/datos";
 import { CrearCuenta, RestablecerClave } from "@/components/CuentaEquipo";
 import { Plus, Pencil, Trash, Upload, Save, MapPin, Phone, Building, ImgIcon, Copy, X } from "@/components/Icons";
 
@@ -14,10 +15,21 @@ export default function Admin() {
   const [tab, setTab] = useState("equipo");
   const [modal, setModal] = useState(null);
   const [copiado, setCopiado] = useState(false);
+  const [errorEquipo, setErrorEquipo] = useState("");
   const [origin, setOrigin] = useState("");
   useEffect(() => setOrigin(window.location.origin), []);
   if (!app) return null;
-  const { rol, equipo, servicios, sucursales, barberia, update, conSesion, yo } = app;
+  const { rol, equipo, servicios, sucursales, barberia, update, conSesion, yo, recargarEquipo } = app;
+
+  /* Con sesión, el equipo se guarda en la base; sin ella, en el navegador */
+  const guardarEnEquipo = async (item) => {
+    if (!conSesion) { save("equipo", item); return; }
+    const r = await guardarMiembro(item.id, item);
+    if (r.error) { setErrorEquipo(r.error); setTimeout(() => setErrorEquipo(""), 4000); return; }
+    setErrorEquipo("");
+    await recargarEquipo();
+    setModal(null);
+  };
 
   if (rol === "barbero") {
     return (
@@ -122,7 +134,7 @@ export default function Admin() {
                   <span className="badge">{rolTxt(m.rol)}</span>
                   <span className="muted">Comisión: <b style={{ color: "var(--ink)" }}>{m.comision}%</b></span>
                   <span className="muted">Activo:</span>
-                  <Toggle on={m.activo} onChange={(v) => save("equipo", { ...m, activo: v })} />
+                  <Toggle on={m.activo} onChange={(v) => guardarEnEquipo({ ...m, activo: v })} />
                   {conSesion && !soyYo && (
                     <button className="icon-btn" title="Restablecer clave"
                       onClick={() => setModal({ t: "clave", item: m })}>🔑</button>
@@ -132,6 +144,7 @@ export default function Admin() {
               );
             })}
           </div>
+          {errorEquipo && <div className="login-error" style={{ marginTop: 14 }}>{errorEquipo}</div>}
           {conSesion && (
             <p className="muted" style={{ marginTop: 14, fontSize: 13 }}>
               Al desactivar a alguien deja de poder entrar, pero sus cortes y comisiones
@@ -261,9 +274,14 @@ export default function Admin() {
         </div>
       )}
 
-      {modal?.t === "cuenta" && <CrearCuenta onClose={() => setModal(null)} />}
+      {modal?.t === "cuenta" && (
+        <CrearCuenta onClose={() => setModal(null)} onCreado={recargarEquipo} />
+      )}
       {modal?.t === "clave" && <RestablecerClave miembro={modal.item} onClose={() => setModal(null)} />}
-      {modal?.t === "miembro" && <MiembroModal item={modal.item} onClose={() => setModal(null)} onSave={(it) => save("equipo", it)} />}
+      {modal?.t === "miembro" && (
+        <MiembroModal item={modal.item} onClose={() => setModal(null)}
+          onSave={(it) => (conSesion ? guardarEnEquipo(it) : save("equipo", it))} />
+      )}
       {modal?.t === "servicio" && <ServicioModal item={modal.item} onClose={() => setModal(null)} onSave={(it) => save("servicios", { ...it, duracion: Number(it.duracion) || 0, precio: Number(it.precio) || 0 })} />}
       {modal?.t === "sucursal" && <SucursalModal item={modal.item} onClose={() => setModal(null)} onSave={(it) => save("sucursales", it)} />}
     </Shell>

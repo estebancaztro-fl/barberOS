@@ -8,18 +8,36 @@ const ROLES = [["barbero", "Barbero"], ["recepcion", "Recepción"], ["admin", "A
 
 /** Llama a las rutas del servidor llevando el token de la sesión */
 async function pedir(ruta, cuerpo) {
-  const { data } = await supabase.auth.getSession();
-  const token = data?.session?.access_token;
-  if (!token) return { error: "Tu sesión expiró. Vuelve a entrar." };
+  let res;
+  try {
+    const { data } = await supabase.auth.getSession();
+    const token = data?.session?.access_token;
+    if (!token) return { error: "Tu sesión expiró. Vuelve a entrar." };
 
-  const res = await fetch(ruta, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify(cuerpo),
-  });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: json.error || "No se pudo completar la operación." };
-  return json;
+    res = await fetch(ruta, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify(cuerpo),
+    });
+  } catch {
+    return { error: "Sin conexión con el servidor. Revisa tu internet." };
+  }
+
+  /* Si el servidor devuelve algo que no es JSON, se muestra el motivo real
+     en vez de un mensaje genérico que no ayuda a nadie. */
+  const texto = await res.text().catch(() => "");
+  let json = null;
+  try { json = texto ? JSON.parse(texto) : null; } catch {}
+
+  if (!res.ok) {
+    if (json?.error) return { error: json.error };
+    if (res.status === 404)
+      return { error: "La ruta del servidor no existe. Falta desplegar la versión nueva." };
+    if (res.status === 401 || res.status === 403)
+      return { error: "No tienes permiso para hacer esto." };
+    return { error: `Error ${res.status} en el servidor. ${texto.slice(0, 140)}` };
+  }
+  return json || {};
 }
 
 /* ---------- Crear cuenta ---------- */

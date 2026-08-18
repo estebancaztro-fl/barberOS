@@ -1,6 +1,7 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useSesion } from "@/lib/sesion";
+import { listarEquipo } from "@/lib/datos";
 
 export const uid = () => Math.random().toString(36).slice(2, 10);
 export const fmt = (n) => "$" + Number(n || 0).toLocaleString("es-CL");
@@ -128,12 +129,27 @@ export function DataProvider({ children }) {
 
   const update = (fn) => setDb((prev) => fn(JSON.parse(JSON.stringify(prev))));
 
-  const barberosActivos = db.equipo.filter((e) => e.rol === "barbero" && e.activo);
-
   /* Con sesión iniciada, la identidad y el rol vienen de la base.
      Sin sesión (modo local de prueba), del selector del sidebar. */
   const ses = useSesion();
   const conSesion = Boolean(ses?.autenticado);
+
+  /* Equipo: primer módulo migrado a la base */
+  const [equipoBase, setEquipoBase] = useState(null);
+  const recargarEquipo = async () => {
+    if (!conSesion) return;
+    const { datos } = await listarEquipo();
+    if (datos) setEquipoBase(datos);
+  };
+  useEffect(() => {
+    if (!conSesion) { setEquipoBase(null); return; }
+    let vivo = true;
+    listarEquipo().then(({ datos }) => { if (vivo && datos) setEquipoBase(datos); });
+    return () => { vivo = false; };
+  }, [conSesion, ses?.perfil?.barberia_id]);
+
+  const equipo = conSesion && equipoBase ? equipoBase : db.equipo;
+  const barberosActivos = equipo.filter((e) => e.rol === "barbero" && e.activo);
   const rolEfectivo = conSesion ? ses.perfil.rol : rol;
   const yo = conSesion
     ? { id: ses.perfil.id, nombre: ses.perfil.nombre, rol: ses.perfil.rol, comision: ses.perfil.comision, activo: true }
@@ -142,13 +158,13 @@ export function DataProvider({ children }) {
   const value = {
     db, update, ready, sucursalId, setSucursalId, sinEspacio,
     rol: rolEfectivo, setRol, conSesion, sesion: ses,
-    usuarioId, setUsuarioId, yo,
+    usuarioId, setUsuarioId, yo, recargarEquipo,
     barberia: conSesion && ses.barberia
       ? { ...db.barberia, nombre: ses.barberia.nombre, slug: ses.barberia.slug }
       : db.barberia,
     sucursales: db.sucursales,
     sucursal: db.sucursales.find((s) => s.id === sucursalId) || db.sucursales[0],
-    equipo: db.equipo,
+    equipo,
     barberos: barberosActivos,
     servicios: db.servicios,
     clientes: db.clientes,
