@@ -4,7 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import Shell from "@/components/Shell";
 import AnalisisRostro from "@/components/AnalisisRostro";
 import { VisorFoto } from "@/components/DetalleReserva";
-import { useApp, proximaVisita, INTERVALO_SUGERIDO } from "@/lib/store";
+import { useApp, proximaVisita, INTERVALO_SUGERIDO, hoyISO } from "@/lib/store";
 import { FORMAS, registroVisagismo, copiarRecomendacion, estaDesactualizada } from "@/lib/rostro";
 import { ChevronLeft, Phone, Mail, Mic, ImgIcon, Clock, Scissors, Note, Save, BarberPole, X } from "@/components/Icons";
 

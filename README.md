@@ -1,4 +1,27 @@
-# BarberOS — V0.12 (cuentas del equipo)
+# BarberOS — V0.13 (arreglo del visagismo + revisor)
+
+**Corregido**: guardar el visagismo tumbaba la app con "Application error". La ficha
+usaba `hoyISO()` sin haberlo importado — un error que **no aparece al compilar**,
+porque JavaScript asume que un nombre desconocido podría ser una variable global.
+Solo revienta cuando el usuario toca el botón.
+
+### Revisor antes de subir
+
+Para que no vuelva a pasar, hay un revisor que detecta funciones propias usadas
+sin importar:
+
+```bash
+node revisar.mjs
+```
+
+Debe terminar con `✓ N archivos revisados, sin problemas`. Si algo falta, dice
+qué función y desde dónde se exporta. Correrlo **antes de cada subida a GitHub**.
+
+Está probado en los dos sentidos: pasa limpio con el código correcto, y detecta
+el error cuando se reintroduce a propósito. Un revisor que solo dice "todo bien"
+no sirve de nada.
+
+# V0.12 (cuentas del equipo)
 
 **Cómo entra un barbero.** El dueño lo crea desde Admin → Equipo con su correo. El sistema
 genera una **clave temporal legible** (tipo `tijera-corte-4821`) que se muestra **una sola vez**
