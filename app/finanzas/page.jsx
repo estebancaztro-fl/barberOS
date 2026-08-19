@@ -3,6 +3,7 @@ import { useState } from "react";
 import Shell from "@/components/Shell";
 import Modal from "@/components/Modal";
 import { useApp, uid, fmt, hoyISO } from "@/lib/store";
+import { crearIngreso, crearGasto, crearPagoComision } from "@/lib/datos";
 import { Plus, Upload } from "@/components/Icons";
 
 const METODOS = ["efectivo", "transferencia", "tarjeta", "otros"];
@@ -14,8 +15,10 @@ export default function Finanzas() {
   const [tab, setTab] = useState("resumen");
   const [mes, setMes] = useState(hoyISO().slice(0, 7));
   const [modal, setModal] = useState(null);
+  const [error, setError] = useState("");
   if (!app) return null;
-  const { rol, ingresos, gastos, barberos, pagosComision, update } = app;
+  const { rol, ingresos, gastos, barberos, pagosComision, update,
+          conSesion, barberia, recargar } = app;
 
   if (rol !== "admin") {
     return (
@@ -39,10 +42,38 @@ export default function Finanzas() {
   });
   const comPend = comisiones.reduce((a, c) => a + c.pendiente, 0);
 
-  const addIngreso = (f) => { update((d) => { d.ingresos.push({ id: uid(), ...f, monto: Number(f.monto) }); return d; }); setModal(null); };
-  const addGasto = (f) => { update((d) => { d.gastos.push({ id: uid(), ...f, monto: Number(f.monto) }); return d; }); setModal(null); };
-  const pagar = (barberoId, monto, metodo) => {
-    update((d) => { d.pagosComision.push({ id: uid(), mes, barberoId, monto: Number(monto), metodo }); return d; });
+  const fallar = (msg) => { setError(msg); setTimeout(() => setError(""), 4000); };
+
+  const addIngreso = async (f) => {
+    if (conSesion) {
+      const r = await crearIngreso(barberia.id, f);
+      if (r.error) return fallar(r.error);
+      await recargar("ingresos");
+    } else {
+      update((d) => { d.ingresos.push({ id: uid(), ...f, monto: Number(f.monto) }); return d; });
+    }
+    setModal(null);
+  };
+
+  const addGasto = async (f) => {
+    if (conSesion) {
+      const r = await crearGasto(barberia.id, f);
+      if (r.error) return fallar(r.error);
+      await recargar("gastos");
+    } else {
+      update((d) => { d.gastos.push({ id: uid(), ...f, monto: Number(f.monto) }); return d; });
+    }
+    setModal(null);
+  };
+
+  const pagar = async (barberoId, monto, metodo) => {
+    if (conSesion) {
+      const r = await crearPagoComision(barberia.id, { barberoId, mes, monto, metodo });
+      if (r.error) return fallar(r.error);
+      await recargar("pagosComision");
+    } else {
+      update((d) => { d.pagosComision.push({ id: uid(), mes, barberoId, monto: Number(monto), metodo }); return d; });
+    }
     setModal(null);
   };
 
@@ -72,6 +103,8 @@ export default function Finanzas() {
         {tab === "ingresos" && <button className="btn dark" onClick={() => setModal("pago")}><Plus /> agregar pago</button>}
         {tab === "gastos" && <button className="btn dark" onClick={() => setModal("gasto")}><Plus /> agregar gasto</button>}
       </div>
+
+      {error && <div className="login-error" style={{ marginBottom: 16 }}>{error}</div>}
 
       {tab === "resumen" && (
         <div className="two-col">

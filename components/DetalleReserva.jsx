@@ -6,6 +6,9 @@ import AnalisisRostro from "@/components/AnalisisRostro";
 import { useApp, uid, fmt, hoyISO, finalizarReserva } from "@/lib/store";
 import { FORMAS, registroVisagismo } from "@/lib/rostro";
 import { comprimirImagen } from "@/lib/imagen";
+import {
+  guardarReserva, guardarCliente, crearCliente, crearIngreso, darConsentimiento,
+} from "@/lib/datos";
 import { Scissors, Clock, Note, ImgIcon, X, Trash, Upload } from "@/components/Icons";
 
 const ESTADOS = [
@@ -24,7 +27,8 @@ export default function DetalleReserva({ reserva, onClose }) {
   const [verFoto, setVerFoto] = useState(false);
   if (!app) return null;
 
-  const { update, servicios, equipo, clientes, sinEspacio } = app;
+  const { update, servicios, equipo, clientes, sinEspacio,
+          conSesion, barberia, recargar } = app;
   const r = app.reservas.find((x) => x.id === reserva.id) || reserva;
   const servicio = servicios.find((s) => s.id === r.servicioId);
   const barbero = equipo.find((b) => b.id === r.barberoId);
@@ -36,9 +40,31 @@ export default function DetalleReserva({ reserva, onClose }) {
     ? vis.recomendacion
     : (forma ? FORMAS[forma] : null);
 
-  const cambiarEstado = (e) => {
-    if (e === "finalizado") return finalizarReserva(update, r);
-    update((d) => { const x = d.reservas.find((y) => y.id === r.id); if (x) x.estado = e; return d; });
+  const avisar = (msg) => { setAviso(msg); setTimeout(() => setAviso(""), 4000); };
+
+  const cambiarEstado = async (e) => {
+    if (!conSesion) {
+      if (e === "finalizado") return finalizarReserva(update, r);
+      update((d) => { const x = d.reservas.find((y) => y.id === r.id); if (x) x.estado = e; return d; });
+      return;
+    }
+
+    const res = await guardarReserva(r.id, { estado: e });
+    if (res.error) { avisar(res.error); return; }
+
+    /* Al finalizar se registra el ingreso. Los cortes acumulados y la última
+       visita del cliente los recalcula la base sola. */
+    if (e === "finalizado" && servicio) {
+      await crearIngreso(barberia.id, {
+        fecha: r.fecha,
+        concepto: `${servicio.nombre} · ${r.clienteNombre}`,
+        metodo: "efectivo",
+        monto: servicio.precio,
+        barberoId: r.barberoId,
+        reservaId: r.id,
+      });
+    }
+    await recargar("reservas", "clientes", "ingresos");
   };
 
   /* Foto del corte terminado: se comprime antes de guardar */
@@ -48,26 +74,41 @@ export default function DetalleReserva({ reserva, onClose }) {
     setAviso("");
     try {
       const dataUrl = await comprimirImagen(file);
-      update((d) => { const x = d.reservas.find((y) => y.id === r.id); if (x) x.foto = dataUrl; return d; });
-      setAviso("Foto guardada en el historial del cliente.");
-      setTimeout(() => setAviso(""), 3000);
+
+      if (conSesion) {
+        /* La base rechaza la foto sin consentimiento del cliente */
+        if (r.clienteId) await darConsentimiento(barberia.id, r.clienteId, "fotos_corte");
+        const res = await guardarReserva(r.id, { foto: dataUrl });
+        if (res.error) { avisar(res.error); setSubiendo(false); return; }
+        await recargar("reservas");
+      } else {
+        update((d) => { const x = d.reservas.find((y) => y.id === r.id); if (x) x.foto = dataUrl; return d; });
+      }
+      avisar("Foto guardada en el historial del cliente.");
     } catch {
-      setAviso("No se pudo procesar la foto. Inténtalo de nuevo.");
+      avisar("No se pudo procesar la foto. Inténtalo de nuevo.");
     }
     setSubiendo(false);
   };
 
-  const quitarFoto = () =>
+  const quitarFoto = async () => {
+    if (conSesion) {
+      const res = await guardarReserva(r.id, { foto: null });
+      if (res.error) { avisar(res.error); return; }
+      await recargar("reservas");
+      return;
+    }
     update((d) => { const x = d.reservas.find((y) => y.id === r.id); if (x) x.foto = null; return d; });
+  };
 
   /* Finaliza el servicio y ofrece la foto si aún no la tiene */
-  const finalizar = () => {
-    finalizarReserva(update, r);
-    if (!r.foto) setAviso("Servicio finalizado. Saca una foto del resultado para el historial.");
+  const finalizar = async () => {
+    await cambiarEstado("finalizado");
+    if (!r.foto) avisar("Servicio finalizado. Saca una foto del resultado para el historial.");
   };
 
   /* Guarda el visagismo en la ficha. Si el cliente no estaba registrado, lo crea. */
-  const guardarAnalisis = (res) => {
+  const guardarAnalisis = async (res) => {
     /* Solo la categoría y copia fija del consejo dado hoy.
        Las proporciones del rostro no se almacenan. */
     const analisis = registroVisagismo({
@@ -77,6 +118,25 @@ export default function DetalleReserva({ reserva, onClose }) {
       origen: "scan",
       fecha: hoyISO(),
     });
+    setEscaneando(false);
+
+    if (conSesion) {
+      let clienteId = r.clienteId;
+      /* Si la reserva era a nombre suelto, se le crea la ficha */
+      if (!clienteId) {
+        const nuevo = await crearCliente(barberia.id, { nombre: r.clienteNombre });
+        if (nuevo.error) { avisar(nuevo.error); return; }
+        clienteId = nuevo.datos.id;
+        await guardarReserva(r.id, { clienteId });
+      }
+      await darConsentimiento(barberia.id, clienteId, "visagismo");
+      const res = await guardarCliente(clienteId, { formaRostro: analisis.forma, visagismo: analisis });
+      if (res.error) { avisar(res.error); return; }
+      await recargar("clientes", "reservas");
+      avisar(r.clienteId ? "Visagismo guardado en la ficha." : "Cliente creado y visagismo guardado.");
+      return;
+    }
+
     update((d) => {
       let c = d.clientes.find((x) => x.id === r.clienteId);
       if (!c) {
@@ -93,9 +153,7 @@ export default function DetalleReserva({ reserva, onClose }) {
       c.visagismo = analisis;
       return d;
     });
-    setEscaneando(false);
-    setAviso(cliente ? "Visagismo guardado en la ficha." : "Cliente creado y visagismo guardado.");
-    setTimeout(() => setAviso(""), 3000);
+    avisar(cliente ? "Visagismo guardado en la ficha." : "Cliente creado y visagismo guardado.");
   };
 
   return (

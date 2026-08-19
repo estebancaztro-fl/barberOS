@@ -3,7 +3,10 @@ import { useState, useEffect } from "react";
 import Shell from "@/components/Shell";
 import Modal, { Toggle } from "@/components/Modal";
 import { useApp, uid, fmt, aSlug } from "@/lib/store";
-import { guardarMiembro, guardarBarberia } from "@/lib/datos";
+import {
+  guardarMiembro, guardarBarberia,
+  guardarServicio, borrarServicio, guardarSucursal, borrarSucursal,
+} from "@/lib/datos";
 import { comprimirImagen } from "@/lib/imagen";
 import { CrearCuenta, RestablecerClave } from "@/components/CuentaEquipo";
 import { Plus, Pencil, Trash, Upload, Save, MapPin, Phone, Building, ImgIcon, Copy, X } from "@/components/Icons";
@@ -23,7 +26,8 @@ export default function Admin() {
   const [origin, setOrigin] = useState("");
   useEffect(() => setOrigin(window.location.origin), []);
   if (!app) return null;
-  const { rol, equipo, servicios, sucursales, barberia, update, conSesion, yo, recargarEquipo } = app;
+  const { rol, equipo, servicios, sucursales, barberia, update, conSesion, yo,
+          recargarEquipo, recargar } = app;
 
   /* Con sesión, el equipo se guarda en la base; sin ella, en el navegador */
   const guardarEnEquipo = async (item) => {
@@ -44,7 +48,16 @@ export default function Admin() {
     );
   }
 
-  const save = (key, item) => {
+  /* Guardar y borrar: en la base con sesión, en el navegador sin ella */
+  const save = async (key, item) => {
+    if (conSesion && (key === "servicios" || key === "sucursales")) {
+      const fn = key === "servicios" ? guardarServicio : guardarSucursal;
+      const r = await fn(barberia.id, item);
+      if (r.error) { setErrorEquipo(r.error); setTimeout(() => setErrorEquipo(""), 4000); return; }
+      await recargar(key);
+      setModal(null);
+      return;
+    }
     update((d) => {
       const i = d[key].findIndex((x) => x.id === item.id);
       if (i >= 0) d[key][i] = item; else d[key].push({ ...item, id: uid() });
@@ -52,7 +65,17 @@ export default function Admin() {
     });
     setModal(null);
   };
-  const del = (key, id) => update((d) => { d[key] = d[key].filter((x) => x.id !== id); return d; });
+
+  const del = async (key, id) => {
+    if (conSesion && (key === "servicios" || key === "sucursales")) {
+      const fn = key === "servicios" ? borrarServicio : borrarSucursal;
+      const r = await fn(id);
+      if (r.error) { setErrorEquipo(r.error); setTimeout(() => setErrorEquipo(""), 4000); return; }
+      await recargar(key);
+      return;
+    }
+    update((d) => { d[key] = d[key].filter((x) => x.id !== id); return d; });
+  };
 
   const link = `${origin}/b/${barberia.slug}`;
   const copiar = async () => {
@@ -223,7 +246,7 @@ export default function Admin() {
                     <span><Phone style={{ verticalAlign: -2 }} /> {s.telefono}</span>
                   </div>
                 </div>
-                <span className="muted">Activo:</span>
+                <span className="muted">Activa:</span>
                 <Toggle on={s.activa} onChange={(v) => save("sucursales", { ...s, activa: v })} />
                 <button className="icon-btn" onClick={() => setModal({ t: "sucursal", item: s })}><Pencil /></button>
                 <button className="icon-btn red" onClick={() => del("sucursales", s.id)}><Trash /></button>

@@ -1,7 +1,10 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useSesion } from "@/lib/sesion";
-import { listarEquipo } from "@/lib/datos";
+import {
+  listarEquipo, listarServicios, listarSucursales, listarClientes,
+  listarReservas, listarIngresos, listarGastos, listarPagosComision,
+} from "@/lib/datos";
 
 export const uid = () => Math.random().toString(36).slice(2, 10);
 export const fmt = (n) => "$" + Number(n || 0).toLocaleString("es-CL");
@@ -134,22 +137,68 @@ export function DataProvider({ children }) {
   const ses = useSesion();
   const conSesion = Boolean(ses?.autenticado);
 
-  /* Equipo: primer módulo migrado a la base */
-  const [equipoBase, setEquipoBase] = useState(null);
-  const recargarEquipo = async () => {
-    if (!conSesion) return;
-    const { datos } = await listarEquipo();
-    if (datos) setEquipoBase(datos);
+  /* ---------- Datos desde Supabase ----------
+     Cada módulo se carga por separado para poder refrescar solo lo que
+     cambió. Mientras no hay sesión, todo sigue viniendo del navegador. */
+  const CARGADORES = {
+    equipo: listarEquipo,
+    servicios: listarServicios,
+    sucursales: listarSucursales,
+    clientes: listarClientes,
+    reservas: listarReservas,
+    ingresos: listarIngresos,
+    gastos: listarGastos,
+    pagosComision: listarPagosComision,
   };
+
+  const [base, setBase] = useState({});
+  const [cargandoDatos, setCargandoDatos] = useState(false);
+
+  const recargar = async (...modulos) => {
+    if (!conSesion) return;
+    const cuales = modulos.length ? modulos : Object.keys(CARGADORES);
+    const res = await Promise.all(cuales.map((m) => CARGADORES[m]()));
+    setBase((prev) => {
+      const nuevo = { ...prev };
+      cuales.forEach((m, i) => { if (res[i]?.datos) nuevo[m] = res[i].datos; });
+      return nuevo;
+    });
+  };
+
   useEffect(() => {
-    if (!conSesion) { setEquipoBase(null); return; }
+    if (!conSesion) { setBase({}); return; }
     let vivo = true;
-    listarEquipo().then(({ datos }) => { if (vivo && datos) setEquipoBase(datos); });
+    setCargandoDatos(true);
+    (async () => {
+      const claves = Object.keys(CARGADORES);
+      const res = await Promise.all(claves.map((m) => CARGADORES[m]()));
+      if (!vivo) return;
+      const nuevo = {};
+      claves.forEach((m, i) => { nuevo[m] = res[i]?.datos || []; });
+      setBase(nuevo);
+      setCargandoDatos(false);
+    })();
     return () => { vivo = false; };
   }, [conSesion, ses?.perfil?.barberia_id]);
 
-  const equipo = conSesion && equipoBase ? equipoBase : db.equipo;
+  /* Con sesión manda la base; sin ella, el navegador */
+  const dato = (clave) => (conSesion && base[clave] ? base[clave] : db[clave]);
+
+  const equipo = dato("equipo");
   const barberosActivos = equipo.filter((e) => e.rol === "barbero" && e.activo);
+
+  /* Los identificadores de la base no son los de prueba: si la sucursal
+     guardada ya no existe, se toma la primera disponible. */
+  const sucursales = dato("sucursales");
+  const sucursal = sucursales.find((s) => s.id === sucursalId) || sucursales[0] || null;
+
+  /* Vista unificada para los cálculos (métricas del barbero, etc.) */
+  const datos = {
+    equipo, servicios: dato("servicios"), clientes: dato("clientes"),
+    reservas: dato("reservas"), ingresos: dato("ingresos"),
+    gastos: dato("gastos"), pagosComision: dato("pagosComision"),
+    sucursales,
+  };
   const rolEfectivo = conSesion ? ses.perfil.rol : rol;
   const yo = conSesion
     ? { id: ses.perfil.id, nombre: ses.perfil.nombre, rol: ses.perfil.rol, comision: ses.perfil.comision, activo: true }
@@ -158,7 +207,9 @@ export function DataProvider({ children }) {
   const value = {
     db, update, ready, sucursalId, setSucursalId, sinEspacio,
     rol: rolEfectivo, setRol, conSesion, sesion: ses,
-    usuarioId, setUsuarioId, yo, recargarEquipo,
+    usuarioId, setUsuarioId, yo,
+    recargar, cargandoDatos,
+    recargarEquipo: () => recargar("equipo"),
     barberia: conSesion && ses.barberia
       ? {
           ...db.barberia,
@@ -169,16 +220,17 @@ export function DataProvider({ children }) {
           slugsAnteriores: ses.barberia.slugs_anteriores || [],
         }
       : db.barberia,
-    sucursales: db.sucursales,
-    sucursal: db.sucursales.find((s) => s.id === sucursalId) || db.sucursales[0],
+    datos,
+    sucursales,
+    sucursal,
     equipo,
     barberos: barberosActivos,
-    servicios: db.servicios,
-    clientes: db.clientes,
-    reservas: db.reservas,
-    ingresos: db.ingresos,
-    gastos: db.gastos,
-    pagosComision: db.pagosComision,
+    servicios: dato("servicios"),
+    clientes: dato("clientes"),
+    reservas: dato("reservas"),
+    ingresos: dato("ingresos"),
+    gastos: dato("gastos"),
+    pagosComision: dato("pagosComision"),
   };
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

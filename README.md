@@ -1,4 +1,32 @@
-# BarberOS — V0.14 (reservas públicas y barbería en la base)
+# BarberOS — V1.0-beta (migración a Supabase completa)
+
+**Todos los módulos guardan en la base de datos.** Agenda, clientes, visagismo,
+finanzas, CRM, equipo, servicios, sucursales y reservas públicas. Lo que un
+barbero anota en su celular aparece en el computador de recepción.
+
+### Antes de nada: corre la migración 008
+
+`supabase/migraciones/008_alinear.sql` agrega campos que faltaban —cortes
+acumulados, última visita, registro de visagismo, tabla de campañas— y hace
+que la **base calcule sola** los cortes y la última visita de cada cliente,
+en vez de confiar en que la app se acuerde de actualizarlos.
+
+### Consentimientos, ahora de verdad
+
+Añadir un cliente, guardar un visagismo o subir una foto **exigen consentimiento**.
+No es una casilla decorativa: la base rechaza la operación si no existe el registro.
+
+### Modo local intacto
+
+Sin variables de entorno configuradas, la app sigue funcionando contra el navegador
+como el primer día. Útil para mostrarla sin conexión o volver atrás si algo falla.
+
+### Lo que sigue
+
+1. Onboarding: registro automático de barberías nuevas (requiere conectar servicio de correo)
+2. Landing con planes y precios
+
+# V0.14 (reservas públicas y barbería en la base)
 
 **Corregido**: el link de reservas daba "Barbería no encontrada". La página pública
 seguía leyendo del navegador, donde la barbería tenía otro nombre que el de la base.

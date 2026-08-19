@@ -4,6 +4,7 @@ import Shell from "@/components/Shell";
 import Modal from "@/components/Modal";
 import DetalleReserva from "@/components/DetalleReserva";
 import { useApp, uid, hoyISO } from "@/lib/store";
+import { crearReserva } from "@/lib/datos";
 import { Plus, ChevronLeft, ChevronRight, Search } from "@/components/Icons";
 
 const HORAS = ["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00"];
@@ -19,22 +20,33 @@ export default function Agenda() {
   const [fecha, setFecha] = useState(hoyISO());
   const [modal, setModal] = useState(null);
   const [detalle, setDetalle] = useState(null);
+  const [error, setError] = useState("");
   if (!app) return null;
-  const { update, reservas, servicios, barberos, clientes, sucursalId, sucursal } = app;
+  const { update, reservas, servicios, barberos, clientes, sucursalId, sucursal,
+          conSesion, barberia, recargar } = app;
 
-  const delDia = (f) => reservas.filter((r) => r.fecha === f && r.sucursalId === sucursalId);
+  const delDia = (f) =>
+    reservas.filter((r) => r.fecha === f && (!sucursalId || !r.sucursalId || r.sucursalId === sucursalId));
 
-  const guardar = (f) => {
-    update((d) => {
-      const existente = d.clientes.find((c) => c.nombre.toLowerCase() === f.cliente.toLowerCase());
-      d.reservas.push({
-        id: uid(), sucursalId,
-        clienteNombre: f.cliente, clienteId: existente ? existente.id : null,
-        servicioId: f.servicioId, barberoId: f.barberoId,
-        fecha: f.fecha, hora: f.hora, estado: f.estado, notas: f.notas, foto: null,
-      });
-      return d;
-    });
+  const guardar = async (f) => {
+    const existente = clientes.find((c) => c.nombre.toLowerCase() === f.cliente.toLowerCase());
+    const nueva = {
+      sucursalId,
+      clienteNombre: f.cliente, clienteId: existente ? existente.id : null,
+      servicioId: f.servicioId, barberoId: f.barberoId,
+      fecha: f.fecha, hora: f.hora, estado: f.estado, notas: f.notas,
+    };
+
+    if (conSesion) {
+      const r = await crearReserva(barberia.id, nueva);
+      if (r.error) { setError(r.error); return; }
+      await recargar("reservas", "clientes");
+      setError("");
+      setModal(null);
+      return;
+    }
+
+    update((d) => { d.reservas.push({ id: uid(), ...nueva, foto: null }); return d; });
     setModal(null);
   };
 
@@ -61,6 +73,8 @@ export default function Agenda() {
           <button className="btn dark agenda-add" onClick={() => setModal({ hora: "13:00" })}><Plus /> Reservar</button>
         </div>
       </div>
+
+      {error && <div className="login-error" style={{ marginBottom: 16 }}>{error}</div>}
 
       {vista === "dia" && (
         <div className="agenda">

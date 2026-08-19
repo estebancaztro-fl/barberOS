@@ -6,6 +6,7 @@ import AnalisisRostro from "@/components/AnalisisRostro";
 import { VisorFoto } from "@/components/DetalleReserva";
 import { useApp, proximaVisita, INTERVALO_SUGERIDO, hoyISO } from "@/lib/store";
 import { FORMAS, registroVisagismo, copiarRecomendacion, estaDesactualizada } from "@/lib/rostro";
+import { guardarCliente, darConsentimiento } from "@/lib/datos";
 import { ChevronLeft, Phone, Mail, Mic, ImgIcon, Clock, Scissors, Note, Save, BarberPole, X } from "@/components/Icons";
 
 const TIPO_PELO = ["Liso", "Ondulado", "Rulo", "Afro"];
@@ -20,6 +21,7 @@ export default function FichaCliente() {
   const [guardado, setGuardado] = useState(false);
   const [analizando, setAnalizando] = useState(false);
   const [foto, setFoto] = useState(null);
+  const [error, setError] = useState("");
 
   const cliente = app?.clientes.find((c) => c.id === id);
 
@@ -44,35 +46,58 @@ export default function FichaCliente() {
   }
   if (!form) return <Shell><div className="empty">Cargando…</div></Shell>;
 
-  const { update, reservas, servicios, equipo } = app;
+  const { update, reservas, servicios, equipo, conSesion, barberia, recargar } = app;
   const set = (k, v) => { setForm((p) => ({ ...p, [k]: v })); setGuardado(false); };
 
-  const guardar = () => {
+  const avisar = (msg) => { setError(msg); setTimeout(() => setError(""), 4000); };
+  const confirmar = () => { setGuardado(true); setTimeout(() => setGuardado(false), 2000); };
+
+  const guardar = async () => {
+    /* Si eligió la forma a mano, también se guarda copia del consejo */
+    let visagismo = cliente.visagismo || null;
+    if (form.formaRostro && visagismo?.forma !== form.formaRostro) {
+      visagismo = registroVisagismo({ forma: form.formaRostro, origen: "manual", fecha: hoyISO() });
+    }
+    if (!form.formaRostro) visagismo = null;
+
+    if (conSesion) {
+      /* El visagismo es dato sensible: la base exige consentimiento */
+      if (visagismo) await darConsentimiento(barberia.id, id, "visagismo");
+      const r = await guardarCliente(id, { ...form, visagismo });
+      if (r.error) { avisar(r.error); return; }
+      await recargar("clientes");
+      confirmar();
+      return;
+    }
+
     update((d) => {
       const c = d.clientes.find((x) => x.id === id);
       if (!c) return d;
       Object.assign(c, form);
-      /* Si eligió la forma a mano, también se guarda copia del consejo */
-      if (form.formaRostro && c.visagismo?.forma !== form.formaRostro) {
-        c.visagismo = registroVisagismo({
-          forma: form.formaRostro, origen: "manual", fecha: hoyISO(),
-        });
-      }
-      if (!form.formaRostro) c.visagismo = null;
+      c.visagismo = visagismo;
       return d;
     });
-    setGuardado(true);
-    setTimeout(() => setGuardado(false), 2000);
+    confirmar();
   };
 
   /* Trae la ficha al catálogo vigente, dejando constancia de la fecha */
-  const actualizarRecomendacion = () => {
+  const actualizarRecomendacion = async () => {
+    const vis = cliente.visagismo;
+    if (!vis) return;
+    const nuevo = {
+      ...vis,
+      recomendacion: copiarRecomendacion(vis.forma),
+      actualizada_en: hoyISO(),
+    };
+    if (conSesion) {
+      const r = await guardarCliente(id, { visagismo: nuevo });
+      if (r.error) { avisar(r.error); return; }
+      await recargar("clientes");
+      return;
+    }
     update((d) => {
       const c = d.clientes.find((x) => x.id === id);
-      if (c?.visagismo) {
-        c.visagismo.recomendacion = copiarRecomendacion(c.visagismo.forma);
-        c.visagismo.actualizada_en = hoyISO();
-      }
+      if (c) c.visagismo = nuevo;
       return d;
     });
   };
@@ -80,25 +105,32 @@ export default function FichaCliente() {
   /* Guarda el resultado del análisis. La foto nunca se almacena, ni tampoco
      las proporciones del rostro: son medidas biométricas. Sí queda copia
      fija de la recomendación dada ese día. */
-  const usarAnalisis = (r) => {
+  const usarAnalisis = async (r) => {
+    const visagismo = registroVisagismo({
+      forma: r.forma,
+      similitud: r.ranking[0].similitud,
+      confianza: r.confianza,
+      origen: "scan",
+      fecha: hoyISO(),
+    });
     setForm((p) => ({ ...p, formaRostro: r.forma }));
+    setAnalizando(false);
+
+    if (conSesion) {
+      await darConsentimiento(barberia.id, id, "visagismo");
+      const res = await guardarCliente(id, { formaRostro: r.forma, visagismo });
+      if (res.error) { avisar(res.error); return; }
+      await recargar("clientes");
+      confirmar();
+      return;
+    }
+
     update((d) => {
       const c = d.clientes.find((x) => x.id === id);
-      if (c) {
-        c.formaRostro = r.forma;
-        c.visagismo = registroVisagismo({
-          forma: r.forma,
-          similitud: r.ranking[0].similitud,
-          confianza: r.confianza,
-          origen: "scan",
-          fecha: hoyISO(),
-        });
-      }
+      if (c) { c.formaRostro = r.forma; c.visagismo = visagismo; }
       return d;
     });
-    setAnalizando(false);
-    setGuardado(true);
-    setTimeout(() => setGuardado(false), 2000);
+    confirmar();
   };
 
   /* Se muestra la copia guardada, no el catálogo vivo: la ficha conserva
@@ -138,6 +170,7 @@ export default function FichaCliente() {
             <Save /> {guardado ? "¡Guardado!" : "Guardar cambios"}
           </button>
         </div>
+        {error && <div className="login-error" style={{ margin: "0 30px 18px" }}>{error}</div>}
         <div className="obs-block">
           <div className="lbl">OBSERVACIONES</div>
           <textarea

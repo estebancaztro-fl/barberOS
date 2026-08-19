@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Shell from "@/components/Shell";
 import { useApp, segmentoDe, proximaVisita, uid, hoyISO } from "@/lib/store";
+import { crearCampana } from "@/lib/datos";
 import { Refresh, UserMinus, UserCheck, BarberPole, Chat, Mail, Phone, Send } from "@/components/Icons";
 
 const SEGS = [
@@ -28,7 +29,8 @@ export default function CRM() {
   const [prev, setPrev] = useState(null);
   const [enviada, setEnviada] = useState(false);
   if (!app) return null;
-  const { clientes, update } = app;
+  const { clientes, update, conSesion, barberia } = app;
+  const [errorCampana, setErrorCampana] = useState("");
 
   const porSeg = (id) => clientes.filter((c) => segmentoDe(c) === id);
 
@@ -36,11 +38,17 @@ export default function CRM() {
     setPrev({ canal, seg: segObj, msg, destinos: porSeg(segObj) });
     setEnviada(false);
   };
-  const enviar = () => {
-    update((d) => {
-      d.campanas.push({ id: uid(), fecha: hoyISO(), canal: prev.canal, segmento: prev.seg, mensaje: prev.msg, destinatarios: prev.destinos.length });
-      return d;
-    });
+  const enviar = async () => {
+    const campana = {
+      canal: prev.canal, segmento: prev.seg,
+      mensaje: prev.msg, destinatarios: prev.destinos.length,
+    };
+    if (conSesion) {
+      const r = await crearCampana(barberia.id, campana);
+      if (r.error) { setErrorCampana(r.error); setTimeout(() => setErrorCampana(""), 4000); return; }
+    } else {
+      update((d) => { d.campanas.push({ id: uid(), fecha: hoyISO(), ...campana, seg: prev.seg }); return d; });
+    }
     setEnviada(true);
   };
 
@@ -184,7 +192,8 @@ export default function CRM() {
               </>
             )}
             <div style={{ marginTop: "auto", paddingTop: 20, display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 14 }}>
-              {enviada && <span className="muted" style={{ color: "var(--green)", fontWeight: 600 }}>Campaña preparada ✓</span>}
+              {errorCampana && <span className="muted" style={{ color: "var(--red)", fontWeight: 600 }}>{errorCampana}</span>}
+              {enviada && !errorCampana && <span className="muted" style={{ color: "var(--green)", fontWeight: 600 }}>Campaña preparada ✓</span>}
               <button className="btn dark" disabled={!prev} onClick={enviar}><Send /> Enviar</button>
             </div>
             <p className="muted" style={{ marginTop: 10, fontSize: 12.5, textAlign: "right" }}>

@@ -11,14 +11,15 @@ export default function DashboardBarbero() {
   const app = useApp();
   const [detalle, setDetalle] = useState(null);
   if (!app) return null;
-  const { db, yo, servicios, sucursalId } = app;
+  const { datos, yo, servicios, sucursalId } = app;
 
   const hoy = hoyISO();
   const mes = hoy.slice(0, 7);
-  const m = metricasBarbero(db, yo.id, mes);
+  const m = metricasBarbero(datos, yo.id, mes);
 
-  const misHoy = db.reservas
-    .filter((r) => r.barberoId === yo.id && r.fecha === hoy && r.sucursalId === sucursalId && r.estado !== "cancelado")
+  const misHoy = datos.reservas
+    .filter((r) => r.barberoId === yo.id && r.fecha === hoy &&
+      (!sucursalId || !r.sucursalId || r.sucursalId === sucursalId) && r.estado !== "cancelado")
     .sort((a, b) => a.hora.localeCompare(b.hora));
 
   const siguiente = misHoy.find((r) => r.estado !== "finalizado");
