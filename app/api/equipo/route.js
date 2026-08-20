@@ -88,6 +88,8 @@ export async function POST(request) {
       telefono: telefono || null,
       rol, comision,
       activo: true,
+      /* Si no se indica, atiende solo quien tiene rol de barbero */
+      atiende: cuerpo.atiende === undefined ? rol === "barbero" : Boolean(cuerpo.atiende),
       debe_cambiar_clave: true,
     });
 

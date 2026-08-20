@@ -101,7 +101,7 @@ export default function ReservaPublica() {
   });
 
   const valido = f.servicioId && f.fecha && f.hora && f.nombre.trim().length >= 2
-    && f.telefono.trim().length >= 8 && f.aceptaDatos;
+    && f.telefono.trim().length >= 8 && f.aceptaDatos && barberos.length > 0;
 
   const confirmar = async () => {
     setError("");
@@ -182,6 +182,15 @@ export default function ReservaPublica() {
             ))}
           </div>
         </>
+      )}
+
+      {/* Sin nadie atendiendo no se puede reservar: se dice antes de que
+          el cliente llene todo el formulario para nada */}
+      {barberos.length === 0 && (
+        <div className="aviso" style={{ marginTop: 8 }}>
+          <b>{barberia.nombre}</b> todavía no tiene barberos disponibles para reservar
+          por acá. Escríbeles directamente para agendar tu hora.
+        </div>
       )}
 
       <h3>Servicio</h3>

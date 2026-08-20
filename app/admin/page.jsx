@@ -180,6 +180,12 @@ export default function Admin() {
                   </div>
                   <span className="badge">{rolTxt(m.rol)}</span>
                   <span className="muted">Comisión: <b style={{ color: "var(--ink)" }}>{m.comision}%</b></span>
+                  {conSesion && (
+                    <>
+                      <span className="muted" title="Aparece en el link de reservas">Atiende:</span>
+                      <Toggle on={Boolean(m.atiende)} onChange={(v) => guardarEnEquipo({ ...m, atiende: v })} />
+                    </>
+                  )}
                   <span className="muted">Activo:</span>
                   <Toggle on={m.activo} onChange={(v) => guardarEnEquipo({ ...m, activo: v })} />
                   {conSesion && !soyYo && (
@@ -193,9 +199,11 @@ export default function Admin() {
           </div>
           {errorEquipo && <div className="login-error" style={{ marginTop: 14 }}>{errorEquipo}</div>}
           {conSesion && (
-            <p className="muted" style={{ marginTop: 14, fontSize: 13 }}>
-              Al desactivar a alguien deja de poder entrar, pero sus cortes y comisiones
-              anteriores se conservan en las finanzas.
+            <p className="muted" style={{ marginTop: 14, fontSize: 13, lineHeight: 1.6 }}>
+              <b>Atiende</b> define quién aparece en el link de reservas: márcalo también
+              para ti si cortas pelo, y desmárcalo para quien solo administra.<br />
+              <b>Activo</b> es el acceso a la app. Al desactivar a alguien deja de poder
+              entrar, pero sus cortes y comisiones anteriores se conservan.
             </p>
           )}
         </>

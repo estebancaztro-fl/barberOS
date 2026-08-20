@@ -43,7 +43,7 @@ async function pedir(ruta, cuerpo) {
 /* ---------- Crear cuenta ---------- */
 
 export function CrearCuenta({ onClose, onCreado }) {
-  const [f, setF] = useState({ nombre: "", correo: "", telefono: "", rol: "barbero", comision: 40 });
+  const [f, setF] = useState({ nombre: "", correo: "", telefono: "", rol: "barbero", comision: 40, atiende: true });
   const [error, setError] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [listo, setListo] = useState(null);
@@ -101,6 +101,15 @@ export function CrearCuenta({ onClose, onCreado }) {
             onChange={(e) => set("comision", Number(e.target.value))} />
         </div>
       </div>
+
+      <label className="consentimiento" style={{ marginBottom: 16 }}>
+        <input type="checkbox" checked={f.atiende}
+          onChange={(e) => set("atiende", e.target.checked)} />
+        <span>
+          <b>Atiende clientes.</b> Aparece en el link de reservas y puede recibir citas.
+          Desmárcalo para quien solo administra o atiende el mesón.
+        </span>
+      </label>
 
       {error && <div className="login-error">{error}</div>}
 

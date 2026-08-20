@@ -174,7 +174,12 @@ export function DataProvider({ children }) {
   const dato = (clave) => (conSesion && base[clave] ? base[clave] : db[clave]);
 
   const equipo = dato("equipo");
-  const barberosActivos = equipo.filter((e) => e.rol === "barbero" && e.activo);
+  /* Quién puede recibir reservas: lo define "atiende", no el rol.
+     El dueño que también corta pelo aparece acá; la recepcionista no.
+     En modo local (sin base) se cae al rol, que es lo que existe ahí. */
+  const barberosActivos = equipo.filter(
+    (e) => e.activo && (e.atiende !== undefined ? e.atiende : e.rol === "barbero")
+  );
 
   /* Los identificadores de la base no son los de prueba: si la sucursal
      guardada ya no existe, se toma la primera disponible. */

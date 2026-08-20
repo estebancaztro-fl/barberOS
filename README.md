@@ -1,4 +1,26 @@
-# BarberOS — V1.1-beta (alta de barberías)
+# BarberOS — V1.2-beta (el dueño también atiende)
+
+**Corregido**: una barbería recién creada no aceptaba reservas y decía
+"No queda cupo en ese horario". No estaba llena: no tenía a nadie que atendiera,
+porque el dueño es `admin` y solo aparecían los de rol `barbero`.
+
+Detrás había un error de modelo: **el rol y el atender son cosas distintas**.
+En muchas barberías el dueño corta pelo además de administrar, y hay
+recepcionistas que nunca atienden.
+
+- Campo nuevo **`atiende`**, independiente del rol. Define quién aparece en el
+  link de reservas
+- En el asistente, el dueño puede marcarse con **"Yo también atiendo clientes"**,
+  y si nadie atiende se le avisa antes de terminar
+- En Admin → Equipo, interruptor **Atiende** junto a **Activo**: uno es aparecer
+  en las reservas, el otro es poder entrar a la app
+- La migración **marca como atendiendo al administrador** de las barberías que
+  se quedaron sin nadie, así las ya creadas quedan operativas solas
+- La página pública **avisa desde arriba** si no hay quien atienda, en vez de
+  dejar que el cliente llene todo el formulario para nada
+- El mensaje ahora distingue **"no hay barberos"** de **"esa hora ya está tomada"**
+
+# V1.1-beta (alta de barberías)
 
 **Una barbería nueva se da de alta sola**, sin que toques SQL.
 

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useApp, fmt } from "@/lib/store";
 import { supabase } from "@/lib/supabase";
-import { guardarSucursal, guardarServicio, borrarServicio } from "@/lib/datos";
+import { guardarSucursal, guardarServicio, borrarServicio, guardarMiembro } from "@/lib/datos";
 import { CrearCuenta } from "@/components/CuentaEquipo";
 import { Scissors, Plus, Pencil, Trash, Copy, ChevronRight, Building, Users } from "@/components/Icons";
 
@@ -74,8 +74,8 @@ export default function Bienvenida() {
         )}
 
         {paso === 2 && (
-          <PasoEquipo equipo={equipo} link={`${origin}/b/${barberia.slug}`}
-            onCambio={() => recargar("equipo")}
+          <PasoEquipo equipo={equipo} yo={app.yo} link={`${origin}/b/${barberia.slug}`}
+            onCambio={() => recargar("equipo")} onError={avisar}
             onVolver={() => setPaso(1)} onTerminar={terminar} ocupado={ocupado} />
         )}
       </div>
@@ -206,21 +206,40 @@ function EditarServicio({ item, onClose, onSave }) {
 
 /* ---------- Paso 3: equipo ---------- */
 
-function PasoEquipo({ equipo, link, onCambio, onVolver, onTerminar, ocupado }) {
+function PasoEquipo({ equipo, yo, link, onCambio, onError, onVolver, onTerminar, ocupado }) {
   const [creando, setCreando] = useState(false);
   const [copiado, setCopiado] = useState(false);
-  const barberos = equipo.filter((e) => e.rol === "barbero");
+  const [guardando, setGuardando] = useState(false);
+  const barberos = equipo.filter((e) => e.id !== yo?.id);
+  const miPerfil = equipo.find((e) => e.id === yo?.id);
+  const yoAtiendo = Boolean(miPerfil?.atiende);
+  const atienden = equipo.filter((e) => e.atiende && e.activo).length;
 
   const copiar = async () => {
     try { await navigator.clipboard.writeText(link); setCopiado(true); setTimeout(() => setCopiado(false), 1600); } catch {}
   };
 
+  const cambiarYoAtiendo = async (v) => {
+    setGuardando(true);
+    const r = await guardarMiembro(yo.id, { ...miPerfil, atiende: v });
+    setGuardando(false);
+    if (r.error) return onError(r.error);
+    await onCambio();
+  };
+
   return (
     <>
       <p className="bien-texto">
-        Cada barbero entra con su propia cuenta y ve solo sus reservas y sus comisiones.
-        Puedes agregarlos ahora o más tarde desde Admin.
+        Quien atiende aparece en tu link de reservas. Si trabajas solo, márcate a ti
+        mismo y ya puedes recibir citas.
       </p>
+
+      {/* El caso más común al partir: el dueño corta pelo */}
+      <label className="consentimiento" style={{ marginBottom: 18 }}>
+        <input type="checkbox" checked={yoAtiendo} disabled={guardando}
+          onChange={(e) => cambiarYoAtiendo(e.target.checked)} />
+        <span><b>Yo también atiendo clientes</b> — aparezco en el link de reservas.</span>
+      </label>
 
       {barberos.length > 0 && (
         <div className="listcard" style={{ marginBottom: 18 }}>
@@ -248,6 +267,13 @@ function PasoEquipo({ equipo, link, onCambio, onVolver, onTerminar, ocupado }) {
         </div>
         <button className="btn sm" onClick={copiar}><Copy /> {copiado ? "¡Copiado!" : "Copiar"}</button>
       </div>
+
+      {atienden === 0 && (
+        <div className="aviso" style={{ marginTop: 18 }}>
+          Nadie atiende todavía, así que tu link de reservas no va a aceptar citas.
+          Márcate a ti mismo o agrega un barbero.
+        </div>
+      )}
 
       <div className="bien-botones">
         <button className="link-btn" onClick={onVolver}>Atrás</button>
