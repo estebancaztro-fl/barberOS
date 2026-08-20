@@ -26,6 +26,7 @@ En el panel de Supabase, **SQL Editor** → **New query**. Pega y ejecuta **en e
 6. `migraciones/006_cuentas.sql` — cuentas del equipo y corrección de privilegios
 7. `migraciones/007_permisos_servidor.sql` — permisos para crear cuentas desde el servidor
 8. `migraciones/008_alinear.sql` — campos que faltaban y cálculo automático del historial
+9. `migraciones/009_registro.sql` — alta de barberías nuevas y asistente de bienvenida
 
 Si alguno falla, detente y avísame. No sigas al siguiente.
 

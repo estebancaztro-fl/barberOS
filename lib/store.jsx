@@ -20,19 +20,8 @@ const daysAhead = (n) => daysAgo(-n);
 
 export const INTERVALO_SUGERIDO = 21; // días entre cortes
 
-/**
- * Convierte el nombre de la barbería en dirección para el link público.
- * "Barbería Ñuñoa & Co." → "barberia-nunoa-co"
- */
-export function aSlug(texto) {
-  return (texto || "")
-    .normalize("NFD").replace(/[̀-ͯ]/g, "") // quita tildes
-    .replace(/ñ/gi, "n")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 60) || "barberia";
-}
+/* Vive en lib/texto.js porque el servidor también la usa */
+export { aSlug } from "@/lib/texto";
 
 const seed = {
   barberia: {

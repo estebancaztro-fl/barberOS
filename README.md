@@ -1,4 +1,38 @@
-# BarberOS — V1.0-beta (migración a Supabase completa)
+# BarberOS — V1.1-beta (alta de barberías)
+
+**Una barbería nueva se da de alta sola**, sin que toques SQL.
+
+### Registro · `/registro`
+
+El dueño pone el nombre de su barbería, su nombre, correo y contraseña. En un solo
+paso el servidor le crea la cuenta, la barbería, su perfil de administrador, una
+sucursal y cuatro servicios base — para que entre a algo usable, no a pantallas vacías.
+
+Ve su link de reservas en vivo mientras escribe el nombre.
+
+Defensas del registro, por ser una ruta pública: validación estricta, campo trampa
+contra formularios automáticos, tope de altas por hora, y **deshacer completo** si algo
+falla a medias (no quedan cuentas ni barberías huérfanas).
+
+### Asistente · `/bienvenida`
+
+Al entrar por primera vez, el administrador pasa por tres pasos: **sucursal**,
+**servicios** (ajusta precios y borra los que no hace) y **equipo** (crea las cuentas
+de sus barberos). Termina mostrándole su link de reservas listo para copiar.
+
+Solo aparece una vez. Quien ya lo completó entra directo a su dashboard.
+
+### Sobre la verificación de correo
+
+Hoy la cuenta queda activa de inmediato, sin esperar un correo de confirmación. Es lo
+que permite que alguien se registre y esté usando la app en 30 segundos.
+
+La contra: alguien podría registrarse con un correo que no es suyo. Para exigir
+verificación hay que conectar un servicio de correo —Resend da 3.000 mensajes al mes
+gratis— y cambiar `email_confirm: true` a `false` en `app/api/registro/route.js`.
+El correo por defecto de Supabase **no sirve**: manda 2 mensajes por hora.
+
+# V1.0-beta (migración a Supabase completa)
 
 **Todos los módulos guardan en la base de datos.** Agenda, clientes, visagismo,
 finanzas, CRM, equipo, servicios, sucursales y reservas públicas. Lo que un

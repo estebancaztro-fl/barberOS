@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSesion } from "@/lib/sesion";
 import { mensajeError } from "@/lib/supabase";
@@ -73,6 +74,10 @@ export default function Login() {
 
         <p className="muted" style={{ marginTop: 18, textAlign: "center", fontSize: 13 }}>
           ¿Olvidaste tu contraseña? Pídele al administrador de tu barbería que te la restablezca.
+        </p>
+        <p className="muted" style={{ marginTop: 14, textAlign: "center", fontSize: 13.5 }}>
+          ¿Aún no tienes barbería?{" "}
+          <Link href="/registro" style={{ color: "var(--accent)", fontWeight: 600 }}>Crea la tuya</Link>
         </p>
       </form>
     </div>

@@ -131,11 +131,16 @@ for (const archivo of entradas) {
   const faltan = [];
   for (const [nombre, origen] of exportados) {
     if (origen === archivo || disponibles.has(nombre)) continue;
-    /* Como llamada o acceso: nombre( · nombre.  — o como etiqueta JSX: <Nombre
-       El orden importa: "Clientes</span>" es texto, no un componente. */
-    const comoLlamada = new RegExp(`(?<![\\w$.])${nombre}\\s*[(.]`).test(cuerpo);
+    /* Tres formas de uso real, escritas para no confundirse con prosa:
+         nombre(        llamada
+         nombre.algo    acceso a propiedad — el punto debe ir seguido de letra,
+                        si no "desde Admin." se leería como uso
+         <Nombre        etiqueta JSX — el < va ANTES, si no "Clientes</span>"
+                        (texto suelto) contaría como componente                */
+    const comoLlamada  = new RegExp(`(?<![\\w$.])${nombre}\\s*\\(`).test(cuerpo);
+    const comoPropiedad = new RegExp(`(?<![\\w$.])${nombre}\\.[A-Za-z_$]`).test(cuerpo);
     const comoEtiqueta = new RegExp(`<\\s*${nombre}[\\s/>]`).test(cuerpo);
-    const usado = comoLlamada || comoEtiqueta;
+    const usado = comoLlamada || comoPropiedad || comoEtiqueta;
     if (usado) faltan.push(`${nombre}  (se exporta desde ${origen.replace(raiz + "/", "")})`);
   }
 

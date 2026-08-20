@@ -21,7 +21,7 @@ export function SesionProvider({ children }) {
     if (!uid) { setPerfil(null); return; }
     const { data, error } = await supabase
       .from("perfiles")
-      .select("id, nombre, correo, telefono, rol, comision, activo, debe_cambiar_clave, barberia_id, barberias(id, nombre, slug, logo_url, slugs_anteriores)")
+      .select("id, nombre, correo, telefono, rol, comision, activo, debe_cambiar_clave, barberia_id, barberias(id, nombre, slug, logo_url, slugs_anteriores, onboarding_completo)")
       .eq("id", uid)
       .single();
 
@@ -78,6 +78,10 @@ export function SesionProvider({ children }) {
     recargarPerfil: () => cargarPerfil(usuario?.id),
     autenticado: Boolean(usuario && perfil),
     debeCambiarClave: Boolean(perfil?.debe_cambiar_clave),
+    /* El asistente solo lo ve el administrador de una barbería recién creada */
+    debeConfigurar: Boolean(
+      perfil?.rol === "admin" && perfil?.barberias && perfil.barberias.onboarding_completo === false
+    ),
     rol: perfil?.rol ?? null,
     barberia: perfil?.barberias ?? null,
   };

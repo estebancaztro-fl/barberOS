@@ -673,6 +673,49 @@ td svg { width: 15px; height: 15px; color: var(--mut); vertical-align: -2px; mar
 .login-marca .brand-icon svg { width: 26px; height: 26px; }
 .login-marca h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.4px; }
 .login-marca p { color: var(--mut); font-size: 14px; }
+/* ---------- Asistente de bienvenida ---------- */
+.bienvenida { min-height: 100vh; display: flex; justify-content: center; padding: 30px 20px 60px; }
+.bien-caja {
+  width: 100%; max-width: 560px;
+  background: rgba(255,255,255,0.93); border-radius: var(--r);
+  padding: 32px 30px;
+  box-shadow: 0 18px 50px rgba(23,23,26,0.12);
+  backdrop-filter: blur(8px);
+  height: fit-content;
+}
+.bien-cab { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+.bien-cab .brand-icon { width: 52px; height: 52px; background: #17171a; color: #fff; }
+.bien-cab .brand-icon svg { width: 26px; height: 26px; }
+.bien-cab h1 { font-size: 23px; font-weight: 600; letter-spacing: -0.4px; }
+.bien-cab p { color: var(--mut); font-size: 14px; }
+
+.bien-pasos { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+.bien-paso {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 600; color: var(--mut);
+  background: rgba(23,23,26,0.05); border-radius: 999px; padding: 7px 14px 7px 7px;
+}
+.bien-paso.actual { background: #17171a; color: #fff; }
+.bien-paso.hecho { background: #d9f2e4; color: #14713d; }
+.bien-num {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(255,255,255,0.22); color: inherit;
+  display: flex; align-items: center; justify-content: center; font-size: 12px;
+}
+.bien-paso:not(.actual) .bien-num { background: rgba(23,23,26,0.09); }
+.bien-paso.hecho .bien-num { background: rgba(20,113,61,0.15); }
+
+.bien-texto { color: #4a4a52; line-height: 1.6; margin-bottom: 22px; font-size: 14.5px; }
+.bien-botones { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 26px; }
+.bien-link {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  background: linear-gradient(135deg, #f0f7fd, #fdeef0);
+  border-radius: var(--r-sm); padding: 15px 16px; margin-top: 20px;
+}
+.bien-link .grow { flex: 1; min-width: 0; }
+.bien-link b { display: block; font-size: 14px; font-weight: 600; }
+.bien-link span { display: block; font-size: 12.5px; color: var(--mut); word-break: break-all; }
+
 /* Consentimiento en la reserva pública */
 .consentimiento {
   display: flex; gap: 12px; align-items: flex-start;
