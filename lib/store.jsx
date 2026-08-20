@@ -4,6 +4,7 @@ import { useSesion } from "@/lib/sesion";
 import {
   listarEquipo, listarServicios, listarSucursales, listarClientes,
   listarReservas, listarIngresos, listarGastos, listarPagosComision,
+  listarHorarios, listarBloqueos,
 } from "@/lib/datos";
 
 export const uid = () => Math.random().toString(36).slice(2, 10);
@@ -74,6 +75,8 @@ const seed = {
   gastos: [],
   pagosComision: [],
   campanas: [],
+  horarios: [],
+  bloqueos: [],
 };
 
 const KEY = "barberos-db-v2";
@@ -138,6 +141,8 @@ export function DataProvider({ children }) {
     ingresos: listarIngresos,
     gastos: listarGastos,
     pagosComision: listarPagosComision,
+    horarios: listarHorarios,
+    bloqueos: listarBloqueos,
   };
 
   const [base, setBase] = useState({});
@@ -225,12 +230,42 @@ export function DataProvider({ children }) {
     ingresos: dato("ingresos"),
     gastos: dato("gastos"),
     pagosComision: dato("pagosComision"),
+    horarios: dato("horarios"),
+    bloqueos: dato("bloqueos"),
   };
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
 export const useApp = () => useContext(Ctx);
+
+/* ---------------- Horarios ---------------- */
+
+/* Índice 0 = domingo, igual que en la base (extract(dow)) */
+export const DIAS_SEMANA = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+
+/* El mismo por defecto que aplica la migración: domingo cerrado, sábado corto */
+export const horarioPorDefecto = (dia) => ({
+  dia,
+  abierto: dia !== 0,
+  desde: "09:00",
+  hasta: dia === 6 ? "15:00" : "19:00",
+});
+
+/** Los 7 días de una sucursal, completando los que aún no existen. */
+export function horarioDe(horarios, sucursalId) {
+  return [0, 1, 2, 3, 4, 5, 6].map((dia) => {
+    const h = (horarios || []).find((x) => x.sucursalId === sucursalId && x.dia === dia);
+    return h ? { dia, abierto: h.abierto, desde: h.desde, hasta: h.hasta } : horarioPorDefecto(dia);
+  });
+}
+
+/** Si la sucursal atiende ese día. Se usa para avisar en la agenda. */
+export function abreEse(horarios, sucursalId, fechaISO) {
+  const dia = new Date(fechaISO + "T00:00:00").getDay();
+  const h = (horarios || []).find((x) => x.sucursalId === sucursalId && x.dia === dia);
+  return h ? h.abierto : horarioPorDefecto(dia).abierto;
+}
 
 /* Segmentación CRM */
 export function segmentoDe(cliente) {

@@ -28,6 +28,7 @@ En el panel de Supabase, **SQL Editor** → **New query**. Pega y ejecuta **en e
 8. `migraciones/008_alinear.sql` — campos que faltaban y cálculo automático del historial
 9. `migraciones/009_registro.sql` — alta de barberías nuevas y asistente de bienvenida
 10. `migraciones/010_atiende.sql` — separa el rol de quién atiende clientes
+11. `migraciones/011_horarios.sql` — horario de atención por sucursal y bloqueos
 
 Si alguno falla, detente y avísame. No sigas al siguiente.
 
@@ -72,6 +73,11 @@ values (
 
 En SQL Editor, ejecuta el archivo `pruebas/verificar_rls.sql`. Debe imprimir `TODO OK`.
 Si alguna prueba falla, hay una filtración de datos y no se puede lanzar.
+
+Corre `pruebas/verificar_horarios.sql`. Comprueba que un domingo cerrado no ofrezca
+horas, que los bloqueos quiten exactamente las horas que corresponde, que el día libre
+de una persona no cierre la barbería entera y que **una reserva fuera de horario se
+rechace aunque se llame la función directamente**. Debe imprimir `TODO OK`.
 
 Corre también `pruebas/verificar_privilegios.sql`. Comprueba que **un barbero no pueda
 ascenderse a administrador** ni subirse la comisión, y que la barbería no pueda quedarse
@@ -154,6 +160,7 @@ alguien llame la API directamente, se cumplen igual:
 | Solo el administrador ve las finanzas | Políticas `soy_admin()` en `ingresos` y `gastos` |
 | El barbero ve solo sus reservas | Política que compara `barbero_id = auth.uid()` |
 | El barbero ve solo sus comisiones | Política en `pagos_comision` |
+| No se reserva fuera del horario ni en un día bloqueado | `publico_reservar` consulta `hora_reservable()` |
 | No se guarda foto sin autorización | Trigger `exigir_consentimiento_foto` |
 | No se guarda visagismo sin autorización | Trigger `exigir_consentimiento_visagismo` |
 | La comisión no se puede falsear desde el navegador | Se calcula en `mis_metricas()` dentro de la base |

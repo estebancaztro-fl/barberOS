@@ -9,6 +9,7 @@ import {
 } from "@/lib/datos";
 import { comprimirImagen } from "@/lib/imagen";
 import { CrearCuenta, RestablecerClave } from "@/components/CuentaEquipo";
+import Horarios from "@/components/Horarios";
 import { Plus, Pencil, Trash, Upload, Save, MapPin, Phone, Building, ImgIcon, Copy, X } from "@/components/Icons";
 
 const ROLES = [["barbero", "Barbero"], ["recepcion", "Recepción"], ["admin", "Admin"]];
@@ -147,7 +148,7 @@ export default function Admin() {
       </div>
 
       <div className="tabs">
-        {[["equipo", "Equipo"], ["servicios", "Servicios"], ["sucursales", "Sucursales"], ["barberia", "Barbería"]].map(([id, l]) => (
+        {[["equipo", "Equipo"], ["servicios", "Servicios"], ["horarios", "Horarios"], ["sucursales", "Sucursales"], ["barberia", "Barbería"]].map(([id, l]) => (
           <button key={id} className={tab === id ? "on" : ""} onClick={() => setTab(id)}>{l}</button>
         ))}
       </div>
@@ -232,6 +233,8 @@ export default function Admin() {
           </div>
         </>
       )}
+
+      {tab === "horarios" && <Horarios />}
 
       {tab === "sucursales" && (
         <>

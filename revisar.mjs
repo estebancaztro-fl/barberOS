@@ -13,7 +13,12 @@ import { readdirSync, statSync } from "fs";
 /* esbuild es opcional: si no está instalado, se hace igual la revisión
    de imports faltantes, que es la que caza los errores más molestos. */
 let build = null;
-try { ({ build } = await import("esbuild")); } catch {}
+let motivoSinEsbuild = "";
+try {
+  ({ build } = await import("esbuild"));
+} catch (e) {
+  motivoSinEsbuild = "no está instalado (npm i -D esbuild)";
+}
 import { resolve, dirname, join } from "path";
 import { fileURLToPath } from "url";
 
@@ -51,6 +56,24 @@ function archivos(dir, acc = []) {
 const entradas = ["app", "components", "lib"]
   .flatMap((d) => { try { return archivos(resolve(raiz, d)); } catch { return []; } });
 
+/* Prueba de humo: si el propio esbuild está roto —el caso típico es haber
+   copiado node_modules desde otro computador— fallaría en TODOS los archivos
+   y parecería que el proyecto está mal. Mejor decirlo una vez y con claridad. */
+if (build) {
+  try {
+    await build({ stdin: { contents: "export const x = 1;", loader: "js" }, write: false, logLevel: "silent" });
+  } catch (e) {
+    motivoSinEsbuild = e.message || String(e);
+    build = null;
+  }
+}
+
+if (!build) {
+  console.log(`⚠ Revisión de compilación omitida: esbuild ${motivoSinEsbuild}`);
+  console.log("  Si acabas de copiar node_modules de otro equipo:");
+  console.log("  rm -rf node_modules package-lock.json && npm install\n");
+}
+
 let fallos = 0;
 for (const entrada of build ? entradas : []) {
   try {
@@ -72,9 +95,15 @@ for (const entrada of build ? entradas : []) {
     fallos++;
     const rel = entrada.replace(raiz + "/", "");
     console.log(`\n\n✗ ${rel}`);
-    for (const err of e.errors || []) {
-      const l = err.location;
-      console.log(`   ${err.text}${l ? `  (línea ${l.line})` : ""}`);
+    if (e.errors?.length) {
+      for (const err of e.errors) {
+        const l = err.location;
+        console.log(`   ${err.text}${l ? `  (línea ${l.line})` : ""}`);
+      }
+    } else {
+      /* Sin lista de errores no es un problema del archivo, sino de la
+         herramienta: se muestra el motivo real en vez de dejarlo mudo. */
+      console.log(`   ${e.message || e}`);
     }
   }
 }
@@ -152,9 +181,14 @@ for (const archivo of entradas) {
 }
 
 const total = fallos + sinImportar;
-console.log(
-  total === 0
-    ? `\n✓ ${entradas.length} archivos revisados, sin problemas`
-    : `\n✗ ${total} archivo(s) con problemas`
-);
+if (total === 0) {
+  console.log(`\n✓ ${entradas.length} archivos revisados, sin problemas`);
+} else {
+  /* Separado a propósito: no es lo mismo un error de código que uno de
+     herramienta, y el número solo no permitía distinguirlos. */
+  console.log(`\n✗ ${total} archivo(s) con problemas`);
+  if (fallos) console.log(`   ${fallos} al compilar`);
+  if (sinImportar) console.log(`   ${sinImportar} con funciones usadas sin importar`);
+  console.log("   El detalle de cada uno está más arriba.");
+}
 process.exit(total ? 1 : 0);

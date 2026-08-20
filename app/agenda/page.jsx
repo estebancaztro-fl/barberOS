@@ -3,13 +3,22 @@ import { useState } from "react";
 import Shell from "@/components/Shell";
 import Modal from "@/components/Modal";
 import DetalleReserva from "@/components/DetalleReserva";
-import { useApp, uid, hoyISO } from "@/lib/store";
+import { useApp, uid, hoyISO, horarioDe, DIAS_SEMANA } from "@/lib/store";
 import { crearReserva } from "@/lib/datos";
 import { Plus, ChevronLeft, ChevronRight, Search } from "@/components/Icons";
 
-const HORAS = ["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00"];
+/* Grilla base de la agenda, cada media hora */
+const HORAS = [];
+for (let h = 9; h <= 20; h++) {
+  HORAS.push(`${String(h).padStart(2, "0")}:00`);
+  if (h < 20) HORAS.push(`${String(h).padStart(2, "0")}:30`);
+}
 const ESTADOS = ["reservado", "confirmado", "finalizado", "cancelado"];
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+const aMin = (h) => Number(h.slice(0, 2)) * 60 + Number(h.slice(3, 5));
+const aHora = (m) =>
+  `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 
 const addDays = (iso, n) => { const d = new Date(iso + "T00:00:00"); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
 const monday = (iso) => addDays(iso, -((new Date(iso + "T00:00:00").getDay() + 6) % 7));
@@ -23,7 +32,7 @@ export default function Agenda() {
   const [error, setError] = useState("");
   if (!app) return null;
   const { update, reservas, servicios, barberos, clientes, sucursalId, sucursal,
-          conSesion, barberia, recargar } = app;
+          conSesion, barberia, recargar, horarios, bloqueos } = app;
 
   const delDia = (f) =>
     reservas.filter((r) => r.fecha === f && (!sucursalId || !r.sucursalId || r.sucursalId === sucursalId));
@@ -53,6 +62,29 @@ export default function Agenda() {
   const fechaTxt = cap(new Date(fecha + "T00:00:00").toLocaleDateString("es-CL", { weekday: "long", day: "numeric", month: "long" }));
   const lunes = monday(fecha);
 
+  /* La grilla sale del horario de la sucursal, MÁS cualquier hora que tenga
+     una reserva. Lo segundo es lo que faltaba: una cita fuera de la grilla
+     —por ejemplo a las 14:45, o de antes de cambiar el horario— quedaba
+     invisible en vez de mostrarse. */
+  const semana = horarioDe(horarios, sucursal?.id);
+  const diaSemana = new Date(fecha + "T00:00:00").getDay();
+  const hoyHorario = semana[diaSemana];
+
+  const enHorario = [];
+  if (hoyHorario.abierto) {
+    for (let m = aMin(hoyHorario.desde); m < aMin(hoyHorario.hasta); m += 30) enHorario.push(aHora(m));
+  }
+
+  const conReserva = delDia(fecha).map((r) => r.hora).filter(Boolean);
+  const horasDelDia = [...new Set([...enHorario, ...conReserva])].sort();
+
+  /* Bloqueos que caen en este día, para avisarlos en pantalla */
+  const bloqueosHoy = (bloqueos || []).filter(
+    (b) => b.fecha === fecha && (!b.sucursalId || b.sucursalId === sucursal?.id)
+  );
+  const bloqueada = (h) =>
+    bloqueosHoy.some((b) => !b.desde || (h >= b.desde && h < b.hasta));
+
   return (
     <Shell>
       <div className="page-head">
@@ -70,18 +102,39 @@ export default function Agenda() {
             <button onClick={() => setFecha(hoyISO())}>Hoy</button>
             <button onClick={() => setFecha(addDays(fecha, vista === "dia" ? 1 : 7))}><ChevronRight style={{ width: 16, height: 16 }} /></button>
           </div>
-          <button className="btn dark agenda-add" onClick={() => setModal({ hora: "13:00" })}><Plus /> Reservar</button>
+          <button className="btn dark agenda-add"
+            onClick={() => setModal({ hora: horasDelDia[0] || "13:00" })}><Plus /> Reservar</button>
         </div>
       </div>
 
       {error && <div className="login-error" style={{ marginBottom: 16 }}>{error}</div>}
 
+      {vista === "dia" && !hoyHorario.abierto && (
+        <div className="aviso" style={{ marginBottom: 16 }}>
+          <b>{sucursal?.nombre}</b> no atiende los {DIAS_SEMANA[diaSemana].toLowerCase()}.
+          {conReserva.length > 0
+            ? " Igual se muestran las reservas que ya estaban tomadas."
+            : " Puedes cambiarlo en Administración → Horarios."}
+        </div>
+      )}
+
+      {vista === "dia" && bloqueosHoy.some((b) => !b.desde) && (
+        <div className="aviso" style={{ marginBottom: 16 }}>
+          Día bloqueado{bloqueosHoy.find((b) => !b.desde)?.motivo
+            ? `: ${bloqueosHoy.find((b) => !b.desde).motivo}` : ""}. No se reciben reservas online.
+        </div>
+      )}
+
       {vista === "dia" && (
         <div className="agenda">
-          {HORAS.map((h) => {
+          {horasDelDia.length === 0 && (
+            <div className="empty">Sin horas de atención este día.</div>
+          )}
+          {horasDelDia.map((h) => {
             const rs = delDia(fecha).filter((r) => r.hora === h);
+            const cerrada = bloqueada(h);
             return (
-              <div className="slot" key={h}>
+              <div className="slot" key={h} style={cerrada ? { opacity: 0.5 } : undefined}>
                 <div className="h">{h}</div>
                 <div className="body">
                   {rs.map((r) => {
@@ -95,7 +148,9 @@ export default function Agenda() {
                       </button>
                     );
                   })}
-                  <button className="free" onClick={() => setModal({ hora: h })}>+ reservar</button>
+                  {cerrada
+                    ? <span className="free" style={{ cursor: "default" }}>bloqueado</span>
+                    : <button className="free" onClick={() => setModal({ hora: h })}>+ reservar</button>}
                 </div>
               </div>
             );
@@ -127,7 +182,7 @@ export default function Agenda() {
 
       {modal && (
         <NuevaReserva
-          horaInicial={modal.hora} fecha={fecha}
+          horaInicial={modal.hora} fecha={fecha} horas={horasDelDia}
           servicios={servicios.filter((s) => s.activo)} barberos={barberos} clientes={clientes}
           onClose={() => setModal(null)} onSave={guardar}
         />
@@ -136,11 +191,14 @@ export default function Agenda() {
   );
 }
 
-function NuevaReserva({ horaInicial, fecha, servicios, barberos, clientes, onClose, onSave }) {
+function NuevaReserva({ horaInicial, fecha, horas, servicios, barberos, clientes, onClose, onSave }) {
   const [f, setF] = useState({
     cliente: "", servicioId: "", barberoId: "",
     fecha, hora: horaInicial || "13:00", estado: "confirmado", notas: "",
   });
+  /* Se ofrecen las horas de atención del día; si la elegida no está —una
+     reserva antigua, por ejemplo— igual se incluye para no perderla. */
+  const opciones = [...new Set([...(horas?.length ? horas : HORAS), f.hora])].filter(Boolean).sort();
   const set = (k, v) => setF((p) => ({ ...p, [k]: v }));
   const sug = f.cliente
     ? clientes.filter((c) => c.nombre.toLowerCase().includes(f.cliente.toLowerCase()) && c.nombre.toLowerCase() !== f.cliente.toLowerCase()).slice(0, 3)
@@ -190,7 +248,7 @@ function NuevaReserva({ horaInicial, fecha, servicios, barberos, clientes, onClo
           <div className="fechahora">
             <input type="date" value={f.fecha} onChange={(e) => set("fecha", e.target.value)} />
             <select value={f.hora} onChange={(e) => set("hora", e.target.value)}>
-              {HORAS.map((h) => <option key={h} value={h}>{h}</option>)}
+              {opciones.map((h) => <option key={h} value={h}>{h}</option>)}
             </select>
           </div>
         </div>

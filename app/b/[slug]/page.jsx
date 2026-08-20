@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useApp, uid, fmt, hoyISO } from "@/lib/store";
 import { haySupabase } from "@/lib/supabase";
-import { publicoBarberia, publicoHorasOcupadas, publicoReservar } from "@/lib/datos";
+import { publicoBarberia, publicoHorasDisponibles, publicoReservar } from "@/lib/datos";
 import { Scissors } from "@/components/Icons";
 
 const HORAS = ["09:00","09:30","10:00","10:30","11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00","18:30","19:00"];
@@ -24,7 +24,8 @@ export default function ReservaPublica() {
   /* Datos de la barbería: de la base si está conectada, del navegador si no */
   const [cargando, setCargando] = useState(haySupabase);
   const [remota, setRemota] = useState(null);
-  const [ocupadas, setOcupadas] = useState([]);
+  const [libres, setLibres] = useState([]);
+  const [buscandoHoras, setBuscandoHoras] = useState(false);
 
   useEffect(() => {
     if (!haySupabase || !slug) return;
@@ -38,12 +39,20 @@ export default function ReservaPublica() {
     return () => { vivo = false; };
   }, [slug]);
 
-  /* Horas ya tomadas para la fecha elegida */
+  /* Horas reservables para la fecha elegida. Las calcula la base: acá solo
+     se muestran, así la pantalla nunca ofrece algo que después se rechace. */
   useEffect(() => {
     if (!haySupabase || !f.fecha || !remota) return;
     let vivo = true;
-    publicoHorasOcupadas(slug, f.fecha, f.sucursalId, f.barberoId).then(({ datos }) => {
-      if (vivo && datos) setOcupadas(datos);
+    setBuscandoHoras(true);
+    publicoHorasDisponibles(slug, f.fecha, f.sucursalId, f.barberoId).then(({ datos }) => {
+      if (!vivo) return;
+      const horas = datos || [];
+      setLibres(horas);
+      setBuscandoHoras(false);
+      /* Si la hora elegida dejó de estar disponible mientras el cliente
+         llenaba el formulario, se suelta en vez de mandarla y que falle. */
+      setF((p) => (p.hora && !horas.includes(p.hora) ? { ...p, hora: "" } : p));
     });
     return () => { vivo = false; };
   }, [slug, f.fecha, f.sucursalId, f.barberoId, remota]);
@@ -81,7 +90,8 @@ export default function ReservaPublica() {
   const sucursales = haySupabase ? (barberia.sucursales || []) : app.db.sucursales.filter((s) => s.activa);
   const sucursalId = f.sucursalId || sucursales[0]?.id || "";
 
-  /* Horas libres: en modo local se calculan sobre el navegador */
+  /* Con base conectada manda la base. En modo local (sin Supabase) se calcula
+     en el navegador, que es lo único que hay. */
   const tomadasLocal = !haySupabase
     ? app.db.reservas
         .filter((r) => r.fecha === f.fecha && r.estado !== "cancelado" &&
@@ -90,15 +100,12 @@ export default function ReservaPublica() {
     : [];
 
   const cupos = Math.max(1, barberos.length);
-  const horasDisp = HORAS.filter((h) => {
-    if (haySupabase) {
-      const fila = ocupadas.find((o) => (o.hora || "").slice(0, 5) === h);
-      const n = fila ? Number(fila.ocupaciones) : 0;
-      return f.barberoId ? n === 0 : n < cupos;
-    }
-    const n = tomadasLocal.filter((x) => x === h).length;
-    return f.barberoId ? n === 0 : n < cupos;
-  });
+  const horasDisp = haySupabase
+    ? libres
+    : HORAS.filter((h) => {
+        const n = tomadasLocal.filter((x) => x === h).length;
+        return f.barberoId ? n === 0 : n < cupos;
+      });
 
   const valido = f.servicioId && f.fecha && f.hora && f.nombre.trim().length >= 2
     && f.telefono.trim().length >= 8 && f.aceptaDatos && barberos.length > 0;
@@ -225,13 +232,16 @@ export default function ReservaPublica() {
         </div>
         <div className="field">
           <label>Hora</label>
-          <select value={f.hora} onChange={(e) => set("hora", e.target.value)} disabled={!f.fecha}>
-            <option value="">{f.fecha ? "Elige una hora" : "Primero la fecha"}</option>
+          <select value={f.hora} onChange={(e) => set("hora", e.target.value)}
+            disabled={!f.fecha || buscandoHoras}>
+            <option value="">
+              {!f.fecha ? "Primero la fecha" : buscandoHoras ? "Buscando horas…" : "Elige una hora"}
+            </option>
             {horasDisp.map((h) => <option key={h} value={h}>{h}</option>)}
           </select>
-          {f.fecha && horasDisp.length === 0 && (
+          {f.fecha && !buscandoHoras && horasDisp.length === 0 && (
             <p className="muted" style={{ marginTop: 7, fontSize: 13 }}>
-              No queda cupo ese día. Prueba otra fecha.
+              No hay horas ese día. Puede que esté cerrado o que ya se llenó: prueba otra fecha.
             </p>
           )}
         </div>
