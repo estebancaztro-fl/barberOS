@@ -10,8 +10,13 @@ import {
 export const uid = () => Math.random().toString(36).slice(2, 10);
 export const fmt = (n) => "$" + Number(n || 0).toLocaleString("es-CL");
 export const hoyISO = () => new Date().toISOString().slice(0, 10);
-export const diasDesde = (iso) =>
-  Math.floor((Date.now() - new Date(iso + "T00:00:00").getTime()) / 86400000);
+/* null cuando no hay fecha: un cliente nuevo no tiene "días desde" */
+export const diasDesde = (iso) => {
+  if (!iso) return null;
+  const t = new Date(iso + "T00:00:00").getTime();
+  if (Number.isNaN(t)) return null;
+  return Math.floor((Date.now() - t) / 86400000);
+};
 const daysAgo = (n) => {
   const d = new Date();
   d.setDate(d.getDate() - n);
@@ -201,6 +206,19 @@ export function DataProvider({ children }) {
   const sucursales = dato("sucursales");
   const sucursal = sucursales.find((s) => s.id === sucursalId) || sucursales[0] || null;
 
+  /* El id guardado en el navegador puede no existir en esta barbería: pasa al
+     entrar con una cuenta real después de haber probado con los datos de
+     ejemplo, donde las sucursales son "s1" y "s2". Mandar eso a la base
+     revienta con «invalid input syntax for type uuid». Se usa siempre el id
+     de la sucursal que sí existe. */
+  const sucursalReal = sucursal?.id || "";
+
+  /* Y se corrige lo guardado, para que el id inválido no siga dando vueltas
+     en el navegador cada vez que se abre la app. */
+  useEffect(() => {
+    if (sucursalReal && sucursalReal !== sucursalId) setSucursalId(sucursalReal);
+  }, [sucursalReal, sucursalId]);
+
   /* Vista unificada para los cálculos (métricas del barbero, etc.) */
   const datos = {
     equipo, servicios: dato("servicios"), clientes: dato("clientes"),
@@ -214,7 +232,7 @@ export function DataProvider({ children }) {
     : (db.equipo.find((e) => e.id === usuarioId) || barberosActivos[0] || db.equipo[0]);
 
   const value = {
-    db, update, ready, sucursalId, setSucursalId, sinEspacio,
+    db, update, ready, sucursalId: sucursalReal, setSucursalId, sinEspacio,
     rol: rolEfectivo, setRol, conSesion, sesion: ses,
     usuarioId, setUsuarioId, yo,
     recargar, cargandoDatos,
@@ -285,6 +303,8 @@ export function abreEse(horarios, sucursalId, fechaISO) {
 export function segmentoDe(cliente) {
   if (cliente.vip) return "vip";
   const d = diasDesde(cliente.ultimaVisita);
+  /* Agendó pero todavía no se ha atendido: no es ni frecuente ni perdido */
+  if (d === null) return "activo";
   if (d > 60) return "perdido";
   if (d >= INTERVALO_SUGERIDO) return "volver";
   if ((cliente.cortes || 0) >= 4) return "frecuente";
@@ -292,8 +312,16 @@ export function segmentoDe(cliente) {
 }
 
 /* Días hasta la próxima visita sugerida (negativo = atrasado) */
+/**
+ * Días que faltan para la próxima visita sugerida.
+ *
+ * Devuelve null cuando el cliente todavía no tiene ninguna visita terminada:
+ * antes se restaba sobre una fecha vacía y salía "atrasada NaN días".
+ */
 export function proximaVisita(cliente) {
-  return INTERVALO_SUGERIDO - diasDesde(cliente.ultimaVisita);
+  const dias = diasDesde(cliente?.ultimaVisita);
+  if (dias === null) return null;
+  return INTERVALO_SUGERIDO - dias;
 }
 
 /**

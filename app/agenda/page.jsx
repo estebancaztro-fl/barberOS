@@ -29,7 +29,6 @@ export default function Agenda() {
   const [fecha, setFecha] = useState(hoyISO());
   const [modal, setModal] = useState(null);
   const [detalle, setDetalle] = useState(null);
-  const [error, setError] = useState("");
   if (!app) return null;
   const { update, reservas, servicios, barberos, clientes, sucursalId, sucursal,
           conSesion, barberia, recargar, horarios, bloqueos } = app;
@@ -37,6 +36,8 @@ export default function Agenda() {
   const delDia = (f) =>
     reservas.filter((r) => r.fecha === f && (!sucursalId || !r.sucursalId || r.sucursalId === sucursalId));
 
+  /* Devuelve el error en vez de pintarlo en la página: si se muestra detrás
+     del modal queda invisible y parece que el botón no hizo nada. */
   const guardar = async (f) => {
     const existente = clientes.find((c) => c.nombre.toLowerCase() === f.cliente.toLowerCase());
     const nueva = {
@@ -48,15 +49,15 @@ export default function Agenda() {
 
     if (conSesion) {
       const r = await crearReserva(barberia.id, nueva);
-      if (r.error) { setError(r.error); return; }
+      if (r.error) return r.error;
       await recargar("reservas", "clientes");
-      setError("");
       setModal(null);
-      return;
+      return null;
     }
 
     update((d) => { d.reservas.push({ id: uid(), ...nueva, foto: null }); return d; });
     setModal(null);
+    return null;
   };
 
   const fechaTxt = cap(new Date(fecha + "T00:00:00").toLocaleDateString("es-CL", { weekday: "long", day: "numeric", month: "long" }));
@@ -107,7 +108,6 @@ export default function Agenda() {
         </div>
       </div>
 
-      {error && <div className="login-error" style={{ marginBottom: 16 }}>{error}</div>}
 
       {vista === "dia" && !hoyHorario.abierto && (
         <div className="aviso" style={{ marginBottom: 16 }}>
@@ -196,6 +196,18 @@ function NuevaReserva({ horaInicial, fecha, horas, servicios, barberos, clientes
     cliente: "", servicioId: "", barberoId: "",
     fecha, hora: horaInicial || "13:00", estado: "confirmado", notas: "",
   });
+  const [error, setError] = useState("");
+  const [guardando, setGuardando] = useState(false);
+
+  /* Si sale bien, el modal se cierra solo desde arriba. Si sale mal, el
+     error se muestra acá dentro, donde el barbero está mirando. */
+  const enviar = async () => {
+    setError("");
+    setGuardando(true);
+    const err = await onSave(f);
+    setGuardando(false);
+    if (err) setError(err);
+  };
   /* Se ofrecen las horas de atención del día; si la elegida no está —una
      reserva antigua, por ejemplo— igual se incluye para no perderla. */
   const opciones = [...new Set([...(horas?.length ? horas : HORAS), f.hora])].filter(Boolean).sort();
@@ -210,7 +222,9 @@ function NuevaReserva({ horaInicial, fecha, horas, servicios, barberos, clientes
       footer={
         <>
           <button className="link-btn" onClick={onClose}>Cancelar</button>
-          <button className="btn dark" disabled={!f.cliente || !f.servicioId} onClick={() => onSave(f)}>Reservar</button>
+          <button className="btn dark" disabled={!f.cliente || !f.servicioId || guardando} onClick={enviar}>
+            {guardando ? "Reservando…" : "Reservar"}
+          </button>
         </>
       }
     >
@@ -263,6 +277,8 @@ function NuevaReserva({ horaInicial, fecha, horas, servicios, barberos, clientes
         <label>Notas</label>
         <textarea rows={3} value={f.notas} onChange={(e) => set("notas", e.target.value)} />
       </div>
+
+      {error && <div className="login-error">{error}</div>}
     </Modal>
   );
 }

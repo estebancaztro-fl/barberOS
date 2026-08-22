@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Shell from "@/components/Shell";
-import Modal, { Toggle } from "@/components/Modal";
+import Modal, { Toggle, useGuardado, ErrorModal } from "@/components/Modal";
 import { useApp, uid, fmt, aSlug } from "@/lib/store";
 import {
   guardarMiembro, guardarBarberia,
@@ -34,20 +34,23 @@ export default function Admin() {
           recargarEquipo, recargar, plan } = app;
 
   /* Con sesión, el equipo se guarda en la base; sin ella, en el navegador */
+  /* Devuelve el error para que lo muestre quien llamó —el modal, si vino de
+     ahí— en vez de pintarlo en la página donde queda tapado. */
   const guardarEnEquipo = async (item) => {
-    if (!conSesion) { save("equipo", item); return; }
+    if (!conSesion) return save("equipo", item);
     const r = await guardarMiembro(item.id, item);
 
     /* Quedarse sin cupo no es un error del usuario: es una decisión de plan.
        Se le muestra cuánto cuesta y, si acepta, se reintenta lo que quería. */
     if (r.error && /cupo/i.test(r.error)) {
       setCupo({ reintentar: () => guardarEnEquipo(item) });
-      return;
+      return null;
     }
-    if (r.error) { setErrorEquipo(r.error); setTimeout(() => setErrorEquipo(""), 4000); return; }
+    if (r.error) { setErrorEquipo(r.error); setTimeout(() => setErrorEquipo(""), 4000); return r.error; }
     setErrorEquipo("");
     await recargarEquipo();
     setModal(null);
+    return null;
   };
 
   /* Si ya no quedan cupos, agregar a alguien más cuesta: se avisa antes */
@@ -67,10 +70,10 @@ export default function Admin() {
     if (conSesion && (key === "servicios" || key === "sucursales")) {
       const fn = key === "servicios" ? guardarServicio : guardarSucursal;
       const r = await fn(barberia.id, item);
-      if (r.error) { setErrorEquipo(r.error); setTimeout(() => setErrorEquipo(""), 4000); return; }
+      if (r.error) return r.error;
       await recargar(key);
       setModal(null);
-      return;
+      return null;
     }
     update((d) => {
       const i = d[key].findIndex((x) => x.id === item.id);
@@ -78,6 +81,7 @@ export default function Admin() {
       return d;
     });
     setModal(null);
+    return null;
   };
 
   const del = async (key, id) => {
@@ -386,10 +390,12 @@ export default function Admin() {
 function MiembroModal({ item, onClose, onSave }) {
   const [f, setF] = useState(item);
   const set = (k, v) => setF((p) => ({ ...p, [k]: v }));
+  const { enviar, error, guardando } = useGuardado(onSave);
   return (
     <Modal title="Editar / Agregar miembro" onClose={onClose}
       footer={<><button className="link-btn" onClick={onClose}>Cancelar</button>
-        <button className="btn dark" disabled={!f.nombre} onClick={() => onSave(f)}>Guardar</button></>}>
+        <button className="btn dark" disabled={!f.nombre || guardando} onClick={() => enviar(f)}>
+          {guardando ? "Guardando…" : "Guardar"}</button></>}>
       <div className="field"><label>Nombre</label><input value={f.nombre} onChange={(e) => set("nombre", e.target.value)} /></div>
       <div className="grid2">
         <div className="field"><label>Correo</label><input placeholder="correo@mail.com" value={f.correo} onChange={(e) => set("correo", e.target.value)} /></div>
@@ -412,6 +418,7 @@ function MiembroModal({ item, onClose, onSave }) {
           </div>
         </div>
       </div>
+      <ErrorModal error={error} />
     </Modal>
   );
 }
@@ -419,6 +426,7 @@ function MiembroModal({ item, onClose, onSave }) {
 function ServicioModal({ item, onClose, onSave }) {
   const [f, setF] = useState(item);
   const set = (k, v) => setF((p) => ({ ...p, [k]: v }));
+  const { enviar, error, guardando } = useGuardado(onSave);
   const subir = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -429,7 +437,8 @@ function ServicioModal({ item, onClose, onSave }) {
   return (
     <Modal title="Editar / Agregar Servicio" onClose={onClose}
       footer={<><button className="link-btn" onClick={onClose}>Cancelar</button>
-        <button className="btn dark" disabled={!f.nombre} onClick={() => onSave(f)}>Guardar</button></>}>
+        <button className="btn dark" disabled={!f.nombre || guardando} onClick={() => enviar(f)}>
+          {guardando ? "Guardando…" : "Guardar"}</button></>}>
       <div className="field"><label>Nombre</label><input value={f.nombre} onChange={(e) => set("nombre", e.target.value)} /></div>
       <div className="grid2">
         <div className="field"><label>Tiempo</label><input type="number" placeholder="20" value={f.duracion} onChange={(e) => set("duracion", e.target.value)} /></div>
@@ -446,6 +455,7 @@ function ServicioModal({ item, onClose, onSave }) {
           <input type="file" accept="image/*" onChange={subir} style={{ display: "none" }} />
         </label>
       </div>
+      <ErrorModal error={error} />
     </Modal>
   );
 }
@@ -453,16 +463,19 @@ function ServicioModal({ item, onClose, onSave }) {
 function SucursalModal({ item, onClose, onSave }) {
   const [f, setF] = useState(item);
   const set = (k, v) => setF((p) => ({ ...p, [k]: v }));
+  const { enviar, error, guardando } = useGuardado(onSave);
   return (
     <Modal title="Editar / Agregar Sucursal" onClose={onClose}
       footer={<><button className="link-btn" onClick={onClose}>Cancelar</button>
-        <button className="btn dark" disabled={!f.nombre} onClick={() => onSave(f)}>Guardar</button></>}>
+        <button className="btn dark" disabled={!f.nombre || guardando} onClick={() => enviar(f)}>
+          {guardando ? "Guardando…" : "Guardar"}</button></>}>
       <div className="field"><label>Nombre</label><input value={f.nombre} onChange={(e) => set("nombre", e.target.value)} /></div>
       <div className="field"><label>Dirección</label><input value={f.direccion} onChange={(e) => set("direccion", e.target.value)} /></div>
       <div className="field"><label>Teléfono</label><input value={f.telefono} onChange={(e) => set("telefono", e.target.value)} /></div>
       <div className="field">
         <label style={{ display: "flex", alignItems: "center", gap: 12 }}>Activa <Toggle on={f.activa} onChange={(v) => set("activa", v)} /></label>
       </div>
+      <ErrorModal error={error} />
     </Modal>
   );
 }

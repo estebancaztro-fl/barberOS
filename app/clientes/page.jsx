@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Shell from "@/components/Shell";
-import Modal from "@/components/Modal";
+import Modal, { useGuardado, ErrorModal } from "@/components/Modal";
 import { useApp, uid, hoyISO } from "@/lib/store";
 import { crearCliente, guardarCliente, darConsentimiento } from "@/lib/datos";
 import { Search, Phone, Mail, Plus, BarberPole } from "@/components/Icons";
@@ -12,7 +12,6 @@ export default function Clientes() {
   const router = useRouter();
   const [q, setQ] = useState("");
   const [nuevo, setNuevo] = useState(false);
-  const [error, setError] = useState("");
   if (!app) return null;
   const { clientes, update, conSesion, barberia, recargar } = app;
 
@@ -23,15 +22,14 @@ export default function Clientes() {
   const guardar = async (f) => {
     if (conSesion) {
       const r = await crearCliente(barberia.id, f);
-      if (r.error) { setError(r.error); return; }
+      if (r.error) return r.error;
       /* Queda registrado el consentimiento que el cliente dio en el mostrador */
       if (f.aceptaDatos && r.datos?.id) {
         await darConsentimiento(barberia.id, r.datos.id, "datos_basicos");
       }
       await recargar("clientes");
-      setError("");
       setNuevo(false);
-      return;
+      return null;
     }
     update((d) => {
       d.clientes.push({
@@ -42,6 +40,7 @@ export default function Clientes() {
       return d;
     });
     setNuevo(false);
+    return null;
   };
 
   return (
@@ -62,7 +61,6 @@ export default function Clientes() {
         <button className="btn glow" onClick={() => setNuevo(true)}><Plus /> Añadir Cliente</button>
       </div>
 
-      {error && <div className="login-error" style={{ marginBottom: 16 }}>{error}</div>}
 
       <div className="tablecard">
         <table>
@@ -97,10 +95,8 @@ export default function Clientes() {
 
 function NuevoCliente({ onClose, onSave }) {
   const [f, setF] = useState({ nombre: "", telefono: "", correo: "", aceptaDatos: false });
-  const [enviando, setEnviando] = useState(false);
   const set = (k, v) => setF((p) => ({ ...p, [k]: v }));
-
-  const enviar = async () => { setEnviando(true); await onSave(f); setEnviando(false); };
+  const { enviar, error, guardando } = useGuardado(onSave);
 
   return (
     <Modal
@@ -108,8 +104,8 @@ function NuevoCliente({ onClose, onSave }) {
       footer={
         <>
           <button className="link-btn" onClick={onClose}>Cancelar</button>
-          <button className="btn dark" disabled={!f.nombre || !f.aceptaDatos || enviando}
-            onClick={enviar}>{enviando ? "Guardando…" : "Guardar"}</button>
+          <button className="btn dark" disabled={!f.nombre || !f.aceptaDatos || guardando}
+            onClick={() => enviar(f)}>{guardando ? "Guardando…" : "Guardar"}</button>
         </>
       }
     >
@@ -125,6 +121,7 @@ function NuevoCliente({ onClose, onSave }) {
           onChange={(e) => set("aceptaDatos", e.target.checked)} />
         <span>El cliente autoriza guardar su nombre y contacto para gestionar sus reservas.</span>
       </label>
+      <ErrorModal error={error} />
     </Modal>
   );
 }

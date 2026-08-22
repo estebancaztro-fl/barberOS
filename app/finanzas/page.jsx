@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Shell from "@/components/Shell";
-import Modal from "@/components/Modal";
+import Modal, { useGuardado, ErrorModal } from "@/components/Modal";
 import { useApp, uid, fmt, hoyISO } from "@/lib/store";
 import { crearIngreso, crearGasto, crearPagoComision } from "@/lib/datos";
 import { Plus, Upload } from "@/components/Icons";
@@ -15,7 +15,6 @@ export default function Finanzas() {
   const [tab, setTab] = useState("resumen");
   const [mes, setMes] = useState(hoyISO().slice(0, 7));
   const [modal, setModal] = useState(null);
-  const [error, setError] = useState("");
   if (!app) return null;
   const { rol, ingresos, gastos, barberos, pagosComision, update,
           conSesion, barberia, recargar } = app;
@@ -42,39 +41,41 @@ export default function Finanzas() {
   });
   const comPend = comisiones.reduce((a, c) => a + c.pendiente, 0);
 
-  const fallar = (msg) => { setError(msg); setTimeout(() => setError(""), 4000); };
 
   const addIngreso = async (f) => {
     if (conSesion) {
       const r = await crearIngreso(barberia.id, f);
-      if (r.error) return fallar(r.error);
+      if (r.error) return r.error;
       await recargar("ingresos");
     } else {
       update((d) => { d.ingresos.push({ id: uid(), ...f, monto: Number(f.monto) }); return d; });
     }
     setModal(null);
+    return null;
   };
 
   const addGasto = async (f) => {
     if (conSesion) {
       const r = await crearGasto(barberia.id, f);
-      if (r.error) return fallar(r.error);
+      if (r.error) return r.error;
       await recargar("gastos");
     } else {
       update((d) => { d.gastos.push({ id: uid(), ...f, monto: Number(f.monto) }); return d; });
     }
     setModal(null);
+    return null;
   };
 
   const pagar = async (barberoId, monto, metodo) => {
     if (conSesion) {
       const r = await crearPagoComision(barberia.id, { barberoId, mes, monto, metodo });
-      if (r.error) return fallar(r.error);
+      if (r.error) return r.error;
       await recargar("pagosComision");
     } else {
       update((d) => { d.pagosComision.push({ id: uid(), mes, barberoId, monto: Number(monto), metodo }); return d; });
     }
     setModal(null);
+    return null;
   };
 
   return (
@@ -104,7 +105,6 @@ export default function Finanzas() {
         {tab === "gastos" && <button className="btn dark" onClick={() => setModal("gasto")}><Plus /> agregar gasto</button>}
       </div>
 
-      {error && <div className="login-error" style={{ marginBottom: 16 }}>{error}</div>}
 
       {tab === "resumen" && (
         <div className="two-col">
@@ -195,10 +195,12 @@ function MovModal({ titulo, tipo, barberos = [], onClose, onSave }) {
     categoria: "Otros", descripcion: "", monto: "", barberoId: "",
   });
   const set = (k, v) => setF((p) => ({ ...p, [k]: v }));
+  const { enviar, error, guardando } = useGuardado(onSave);
   return (
     <Modal title={titulo} onClose={onClose}
       footer={<><button className="link-btn" onClick={onClose}>Cancelar</button>
-        <button className="btn dark" disabled={!f.monto} onClick={() => onSave(f)}>Guardar</button></>}>
+        <button className="btn dark" disabled={!f.monto || guardando} onClick={() => enviar(f)}>
+          {guardando ? "Guardando…" : "Guardar"}</button></>}>
       <div className="grid2">
         <div className="field"><label>Fecha</label><input type="date" value={f.fecha} onChange={(e) => set("fecha", e.target.value)} /></div>
         <div className="field"><label>Monto ($)</label><input type="number" placeholder="0" value={f.monto} onChange={(e) => set("monto", e.target.value)} /></div>
@@ -230,6 +232,7 @@ function MovModal({ titulo, tipo, barberos = [], onClose, onSave }) {
           <div className="field"><label>Descripción</label><input value={f.descripcion} onChange={(e) => set("descripcion", e.target.value)} /></div>
         </>
       )}
+      <ErrorModal error={error} />
     </Modal>
   );
 }
@@ -237,10 +240,12 @@ function MovModal({ titulo, tipo, barberos = [], onClose, onSave }) {
 function PagarModal({ info, mes, onClose, onSave }) {
   const [monto, setMonto] = useState(info.pendiente);
   const [metodo, setMetodo] = useState("transferencia");
+  const { enviar, error, guardando } = useGuardado(() => onSave(monto, metodo));
   return (
     <Modal title="Pagar comisión" sub={`${info.pagar.nombre}  ·  ${mes.replace("-", " - ")}`} onClose={onClose}
       footer={<><button className="link-btn" onClick={onClose}>Cancelar</button>
-        <button className="btn dark" disabled={!monto} onClick={() => onSave(monto, metodo)}>Registrar pago</button></>}>
+        <button className="btn dark" disabled={!monto || guardando} onClick={() => enviar()}>
+          {guardando ? "Registrando…" : "Registrar pago"}</button></>}>
       <div className="pay-grid">
         <Box label="Calculada" valor={fmt(info.calc)} />
         <Box label="Pagada" valor={fmt(info.pagado)} />
@@ -258,6 +263,7 @@ function PagarModal({ info, mes, onClose, onSave }) {
         <label>Comprobante (imagen)</label>
         <button className="upload"><Upload /> Subir imagen</button>
       </div>
+      <ErrorModal error={error} />
     </Modal>
   );
 }
