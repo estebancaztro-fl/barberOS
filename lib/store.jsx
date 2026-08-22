@@ -4,7 +4,7 @@ import { useSesion } from "@/lib/sesion";
 import {
   listarEquipo, listarServicios, listarSucursales, listarClientes,
   listarReservas, listarIngresos, listarGastos, listarPagosComision,
-  listarHorarios, listarBloqueos, miPlan,
+  listarHorarios, listarBloqueos, listarMensajes, miPlan,
 } from "@/lib/datos";
 
 export const uid = () => Math.random().toString(36).slice(2, 10);
@@ -82,6 +82,7 @@ const seed = {
   campanas: [],
   horarios: [],
   bloqueos: [],
+  mensajes: [],
 };
 
 const KEY = "barberos-db-v2";
@@ -148,6 +149,7 @@ export function DataProvider({ children }) {
     pagosComision: listarPagosComision,
     horarios: listarHorarios,
     bloqueos: listarBloqueos,
+    mensajes: listarMensajes,
   };
 
   const [base, setBase] = useState({});
@@ -245,6 +247,10 @@ export function DataProvider({ children }) {
           slug: ses.barberia.slug,
           logo: ses.barberia.logo_url || null,
           slugsAnteriores: ses.barberia.slugs_anteriores || [],
+          recordatorioActivo: ses.barberia.recordatorio_activo !== false,
+          recordatorioMinutos: ses.barberia.recordatorio_minutos || 25,
+          recordatorioPlantilla: ses.barberia.recordatorio_plantilla || null,
+          whatsappModo: ses.barberia.whatsapp_modo || "app",
         }
       : db.barberia,
     datos,
@@ -260,6 +266,7 @@ export function DataProvider({ children }) {
     pagosComision: dato("pagosComision"),
     horarios: dato("horarios"),
     bloqueos: dato("bloqueos"),
+    mensajes: dato("mensajes"),
     plan,
     recargarPlan,
     /* Sin base conectada no hay cobro que controlar: la app local no se bloquea */

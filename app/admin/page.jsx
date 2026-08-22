@@ -11,6 +11,7 @@ import {
 import { comprimirImagen } from "@/lib/imagen";
 import { CrearCuenta, RestablecerClave } from "@/components/CuentaEquipo";
 import Horarios from "@/components/Horarios";
+import Mensajes from "@/components/Mensajes";
 import AmpliarCupo from "@/components/AmpliarCupo";
 import { Plus, Pencil, Trash, Upload, Save, MapPin, Phone, Building, ImgIcon, Copy, X } from "@/components/Icons";
 
@@ -165,7 +166,7 @@ export default function Admin() {
       </div>
 
       <div className="tabs">
-        {[["equipo", "Equipo"], ["servicios", "Servicios"], ["horarios", "Horarios"], ["sucursales", "Sucursales"], ["barberia", "Barbería"]].map(([id, l]) => (
+        {[["equipo", "Equipo"], ["servicios", "Servicios"], ["horarios", "Horarios"], ["mensajes", "Mensajes"], ["sucursales", "Sucursales"], ["barberia", "Barbería"]].map(([id, l]) => (
           <button key={id} className={tab === id ? "on" : ""} onClick={() => setTab(id)}>{l}</button>
         ))}
         {conSesion && rol === "admin" && (
@@ -262,6 +263,8 @@ export default function Admin() {
       )}
 
       {tab === "horarios" && <Horarios />}
+
+      {tab === "mensajes" && <Mensajes />}
 
       {tab === "sucursales" && (
         <>

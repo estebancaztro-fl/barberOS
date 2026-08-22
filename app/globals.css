@@ -1241,3 +1241,34 @@ td svg { width: 15px; height: 15px; color: var(--mut); vertical-align: -2px; mar
   .lp-cierre { padding: 38px 24px; }
   .lp-nav nav a[href="#precio"] { display: none; }
 }
+
+/* ---------- Citas por confirmar ---------- */
+.por-confirmar {
+  background: rgba(255,255,255,0.92);
+  border-radius: var(--r); padding: 20px 22px; margin-bottom: 22px;
+  box-shadow: 0 1px 2px rgba(23,23,26,0.05);
+}
+.pc-cab { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; color: var(--ink); }
+.pc-cab b { font-size: 15.5px; font-weight: 600; }
+.pc-lista { display: flex; flex-direction: column; gap: 10px; }
+.pc-fila {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: #f4f5f7; border-radius: var(--r-sm); padding: 12px 14px;
+}
+.pc-fila b { font-size: 14.5px; font-weight: 600; }
+.pc-fila .mut { font-size: 13px; color: var(--mut); margin-top: 2px; }
+.pc-fila .grow { flex: 1; min-width: 140px; }
+@media (max-width: 640px) {
+  .por-confirmar { padding: 16px; }
+  .pc-fila { gap: 8px; }
+  .pc-fila .grow { min-width: 100%; }
+  .pc-fila .btn { flex: 1; justify-content: center; }
+}
+
+/* Vista previa del mensaje, con forma de burbuja de WhatsApp */
+.burbuja {
+  background: #dcf8c6; color: #17301a;
+  border-radius: 14px 14px 14px 4px;
+  padding: 14px 16px; font-size: 14.5px; line-height: 1.55;
+  white-space: pre-wrap; max-width: 460px;
+}

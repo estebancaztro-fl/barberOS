@@ -3,7 +3,8 @@ import { useState } from "react";
 import Link from "next/link";
 import Shell from "@/components/Shell";
 import { useApp, segmentoDe, proximaVisita, uid, hoyISO } from "@/lib/store";
-import { crearCampana } from "@/lib/datos";
+import { crearCampana, crearMensajes, marcarEnviado } from "@/lib/datos";
+import { armarTexto, linkWhatsApp } from "@/lib/mensajes";
 import { Refresh, UserMinus, UserCheck, BarberPole, Chat, Mail, Phone, Send } from "@/components/Icons";
 
 const SEGS = [
@@ -29,27 +30,75 @@ export default function CRM() {
   const [prev, setPrev] = useState(null);
   const [enviada, setEnviada] = useState(false);
   if (!app) return null;
-  const { clientes, update, conSesion, barberia } = app;
+  const { clientes, update, conSesion, barberia, mensajes, recargar } = app;
   const [errorCampana, setErrorCampana] = useState("");
 
   const porSeg = (id) => clientes.filter((c) => segmentoDe(c) === id);
+
+  const pendientesCampana = (mensajes || []).filter(
+    (m) => m.tipo === "campana" && m.estado === "pendiente"
+  );
 
   const preparar = () => {
     setPrev({ canal, seg: segObj, msg, destinos: porSeg(segObj) });
     setEnviada(false);
   };
+  /* Prepara la campaña: crea un mensaje por destinatario, ya personalizado.
+     Antes esto solo dejaba una fila registrada y no pasaba nada más. */
   const enviar = async () => {
     const campana = {
       canal: prev.canal, segmento: prev.seg,
       mensaje: prev.msg, destinatarios: prev.destinos.length,
     };
+
+    const paraCliente = (c) => ({
+      tipo: "campana",
+      canal: prev.canal,
+      clienteId: c.id,
+      telefono: c.telefono || "",
+      texto: armarTexto(prev.msg, { cliente: c.nombre, barberia: barberia?.nombre }),
+      estado: "pendiente",
+    });
+
     if (conSesion) {
       const r = await crearCampana(barberia.id, campana);
       if (r.error) { setErrorCampana(r.error); setTimeout(() => setErrorCampana(""), 4000); return; }
+
+      const res = await crearMensajes(
+        barberia.id,
+        prev.destinos.map((c) => ({ ...paraCliente(c), campanaId: r.id }))
+      );
+      if (res.error) { setErrorCampana(res.error); setTimeout(() => setErrorCampana(""), 4000); return; }
+      await recargar("mensajes");
     } else {
-      update((d) => { d.campanas.push({ id: uid(), fecha: hoyISO(), ...campana, seg: prev.seg }); return d; });
+      update((d) => {
+        const id = uid();
+        d.campanas.push({ id, fecha: hoyISO(), ...campana, seg: prev.seg });
+        d.mensajes = [
+          ...(d.mensajes || []),
+          ...prev.destinos.map((c) => ({ id: uid(), campanaId: id, ...paraCliente(c) })),
+        ];
+        return d;
+      });
     }
     setEnviada(true);
+  };
+
+  /* Abre WhatsApp con el mensaje escrito y lo marca como enviado */
+  const enviarUno = async (m) => {
+    const link = linkWhatsApp(m.telefono, m.texto);
+    if (!link) { setErrorCampana("Ese cliente no tiene un teléfono válido."); return; }
+    window.open(link, "_blank", "noopener");
+    if (conSesion) {
+      await marcarEnviado(m.id);
+      await recargar("mensajes");
+    } else {
+      update((d) => {
+        const x = (d.mensajes || []).find((y) => y.id === m.id);
+        if (x) { x.estado = "enviado"; x.enviadoEn = new Date().toISOString(); }
+        return d;
+      });
+    }
   };
 
   return (
@@ -197,13 +246,54 @@ export default function CRM() {
             )}
             <div style={{ marginTop: "auto", paddingTop: 20, display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 14 }}>
               {errorCampana && <span className="muted" style={{ color: "var(--red)", fontWeight: 600 }}>{errorCampana}</span>}
-              {enviada && !errorCampana && <span className="muted" style={{ color: "var(--green)", fontWeight: 600 }}>Campaña preparada ✓</span>}
-              <button className="btn dark" disabled={!prev} onClick={enviar}><Send /> Enviar</button>
+              {enviada && !errorCampana && <span className="muted" style={{ color: "var(--green)", fontWeight: 600 }}>Lista preparada ✓</span>}
+              <button className="btn dark" disabled={!prev || enviada} onClick={enviar}>
+                <Send /> Preparar envíos
+              </button>
             </div>
             <p className="muted" style={{ marginTop: 10, fontSize: 12.5, textAlign: "right" }}>
-              Los envíos aún no están activos: la campaña queda registrada para la futura integración.
+              Puedes usar <b>{"{cliente}"}</b> en el mensaje para saludar a cada
+              uno por su nombre.
             </p>
           </div>
+        </div>
+      )}
+
+      {tab === "campanas" && pendientesCampana.length > 0 && (
+        <div className="card" style={{ marginTop: 20 }}>
+          <div className="toolbar" style={{ marginTop: 0 }}>
+            <div>
+              <h3 className="card-title" style={{ fontSize: 20, marginBottom: 4 }}>
+                Por enviar ({pendientesCampana.length})
+              </h3>
+              <span className="muted" style={{ fontSize: 13.5 }}>
+                Se abre WhatsApp con el mensaje escrito. Tú aprietas enviar.
+              </span>
+            </div>
+          </div>
+
+          <div className="stack">
+            {pendientesCampana.map((m) => {
+              const c = clientes.find((x) => x.id === m.clienteId);
+              return (
+                <div className="rowline" key={m.id}>
+                  <div className="grow">
+                    <h4>{c?.nombre || "Cliente"}</h4>
+                    <div className="mut">{m.telefono || "Sin teléfono"}</div>
+                  </div>
+                  <button className="btn dark sm" onClick={() => enviarUno(m)}>
+                    <Send style={{ width: 15, height: 15 }} /> Enviar
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="muted" style={{ marginTop: 16, fontSize: 13, lineHeight: 1.6 }}>
+            WhatsApp no permite envíos automáticos desde el teléfono. Para que
+            salgan solos hay que conectar la Cloud API de Meta: se explica en
+            Administración → Mensajes.
+          </p>
         </div>
       )}
     </Shell>

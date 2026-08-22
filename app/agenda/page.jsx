@@ -3,6 +3,7 @@ import { useState } from "react";
 import Shell from "@/components/Shell";
 import Modal from "@/components/Modal";
 import DetalleReserva from "@/components/DetalleReserva";
+import PorConfirmar from "@/components/PorConfirmar";
 import { useApp, uid, hoyISO, horarioDe, DIAS_SEMANA } from "@/lib/store";
 import { crearReserva } from "@/lib/datos";
 import { Plus, ChevronLeft, ChevronRight, Search } from "@/components/Icons";
@@ -108,6 +109,8 @@ export default function Agenda() {
         </div>
       </div>
 
+
+      <PorConfirmar />
 
       {vista === "dia" && !hoyHorario.abierto && (
         <div className="aviso" style={{ marginBottom: 16 }}>

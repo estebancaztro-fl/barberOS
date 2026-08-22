@@ -30,6 +30,7 @@ En el panel de Supabase, **SQL Editor** → **New query**. Pega y ejecuta **en e
 10. `migraciones/010_atiende.sql` — separa el rol de quién atiende clientes
 11. `migraciones/011_horarios.sql` — horario de atención por sucursal y bloqueos
 12. `migraciones/012_suscripcion.sql` — prueba de 14 días, cobro y cupo de barberos
+13. `migraciones/013_mensajes.sql` — recordatorios y campañas a clientes
 
 Si alguno falla, detente y avísame. No sigas al siguiente.
 
