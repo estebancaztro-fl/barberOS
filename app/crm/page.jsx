@@ -101,8 +101,12 @@ export default function CRM() {
                         <td data-label="CLIENTE"><Link href={`/clientes/${c.id}`}><b style={{ fontWeight: 600 }}>{c.nombre}</b></Link></td>
                         <td data-label="TELÉFONO"><span><Phone />{c.telefono || "—"}</span></td>
                         <td data-label="CORREO"><span><Mail />{c.correo || "—"}</span></td>
-                        <td data-label="PRÓXIMA VISITA" style={{ textAlign: "right", color: d > 0 ? "var(--accent)" : "var(--red)", fontWeight: 600 }}>
-                          <span>{d > 0 ? `sugerida: ${d} días` : `atrasada ${Math.abs(d)} días`}</span>
+                        <td data-label="PRÓXIMA VISITA" style={{ textAlign: "right", color: d === null ? "var(--mut)" : d > 0 ? "var(--accent)" : "var(--red)", fontWeight: 600 }}>
+                          <span>
+                            {d === null ? "sin visitas aún"
+                              : d > 0 ? `sugerida: ${d} días`
+                              : `atrasada ${Math.abs(d)} días`}
+                          </span>
                         </td>
                       </tr>
                     );

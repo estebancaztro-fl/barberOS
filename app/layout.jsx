@@ -4,8 +4,16 @@ import { SesionProvider } from "@/lib/sesion";
 import Protegido from "@/components/Protegido";
 
 export const metadata = {
-  title: "BarberOS · SaaS para barberías",
-  description: "Gestión de agenda, clientes, finanzas y CRM para barberías",
+  title: "BarberOS · Ordena tu barbería sin dejar la tijera",
+  description:
+    "Agenda, clientes y finanzas en un solo lugar, más visagismo digital e historial de cortes. 14 días gratis, sin tarjeta.",
+  openGraph: {
+    title: "BarberOS · Ordena tu barbería sin dejar la tijera",
+    description:
+      "Agenda online, ficha de cada cliente, comisiones calculadas solas y análisis de rostro para recomendar el corte.",
+    type: "website",
+    locale: "es_CL",
+  },
 };
 
 export const viewport = {

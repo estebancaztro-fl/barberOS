@@ -22,16 +22,21 @@ export default function Protegido({ children }) {
   const enCambioClave = ruta === "/cambiar-clave";
   const enBienvenida = ruta === "/bienvenida";
 
+  /* La portada hace de dos cosas: landing para quien llega de la calle,
+     dashboard para quien ya tiene cuenta. Por eso no se manda al login;
+     la propia página decide qué mostrar. */
+  const esPortada = ruta === "/";
+
   useEffect(() => {
     if (!ses || ses.cargando || abierta) return;
     if (!ses.haySupabase) return;          // sin conexión configurada, no redirige
-    if (!ses.autenticado) { router.replace("/login"); return; }
+    if (!ses.autenticado) { if (!esPortada) router.replace("/login"); return; }
     /* Con clave temporal no se entra a ninguna pantalla hasta cambiarla */
     if (ses.debeCambiarClave && !enCambioClave) { router.replace("/cambiar-clave"); return; }
     /* Barbería recién creada: primero el asistente de configuración */
     if (!ses.debeCambiarClave && ses.debeConfigurar && !enBienvenida) router.replace("/bienvenida");
   }, [ses, ses?.cargando, ses?.autenticado, ses?.debeCambiarClave, ses?.debeConfigurar,
-      abierta, enCambioClave, enBienvenida, router]);
+      abierta, esPortada, enCambioClave, enBienvenida, router]);
 
   if (!ses) return null;
   if (abierta) return children;
@@ -59,7 +64,8 @@ export default function Protegido({ children }) {
         </div>
       );
     }
-    return null;   // redirigiendo al login
+    if (esPortada) return children;   // muestra la landing
+    return null;                      // redirigiendo al login
   }
 
   if (ses.debeCambiarClave && !enCambioClave) return null;              // redirigiendo

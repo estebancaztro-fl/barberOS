@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useApp } from "@/lib/store";
 import { Scissors, Grid, Calendar, Users, Dollar, Chat, Settings, ChevronDown, X } from "@/components/Icons";
+import AvisoPlan from "@/components/AvisoPlan";
 
 const NAV = [
   { href: "/", label: "Inicio", full: "Dashboard", Icon: Grid },
@@ -137,7 +138,7 @@ export default function Shell({ children }) {
         </button>
       </header>
 
-      <main className="content">{children}</main>
+      <main className="content"><AvisoPlan />{children}</main>
 
       {/* ---------- Barra inferior (celular) ---------- */}
       <nav className="tabbar">

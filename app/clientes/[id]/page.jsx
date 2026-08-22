@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import Shell from "@/components/Shell";
 import AnalisisRostro from "@/components/AnalisisRostro";
 import { VisorFoto } from "@/components/DetalleReserva";
+import SubirFoto from "@/components/SubirFoto";
 import { useApp, proximaVisita, INTERVALO_SUGERIDO, hoyISO } from "@/lib/store";
 import { FORMAS, registroVisagismo, copiarRecomendacion, estaDesactualizada } from "@/lib/rostro";
 import { guardarCliente, darConsentimiento } from "@/lib/datos";
@@ -21,6 +22,7 @@ export default function FichaCliente() {
   const [guardado, setGuardado] = useState(false);
   const [analizando, setAnalizando] = useState(false);
   const [foto, setFoto] = useState(null);
+  const [avisoFoto, setAvisoFoto] = useState("");
   const [error, setError] = useState("");
 
   const cliente = app?.clientes.find((c) => c.id === id);
@@ -273,6 +275,7 @@ export default function FichaCliente() {
 
       <div className="card dark">
         <h3 style={{ fontSize: 21, fontWeight: 700, marginBottom: 20 }}>Historial de cortes</h3>
+        {avisoFoto && <div className="login-error" style={{ marginBottom: 14 }}>{avisoFoto}</div>}
         {historial.length === 0 ? (
           <div className="muted" style={{ padding: "20px 0" }}>Sin cortes registrados todavía.</div>
         ) : (
@@ -286,6 +289,18 @@ export default function FichaCliente() {
                     style={r.foto ? { cursor: "zoom-in" } : undefined}>
                     {r.foto ? <img src={r.foto} alt="Resultado del corte" /> : <ImgIcon />}
                   </div>
+                  {/* La foto también se puede agregar acá: si el barbero se
+                      olvidó al terminar, no tiene que volver a la agenda.
+                      En una cita futura no tiene sentido: todavía no hay corte. */}
+                  {r.fecha <= hoyISO() && (
+                    <div className="corte-foto">
+                      <SubirFoto
+                        reserva={r} clase="btn sm" etiqueta={r.foto ? "Cambiar foto" : "Agregar foto"}
+                        onListo={() => setAvisoFoto("")}
+                        onError={setAvisoFoto}
+                      />
+                    </div>
+                  )}
                   <div className="meta">
                     <Clock style={{ width: 14, height: 14, color: "#a9a9b4" }} />
                     <b>{sv?.nombre || "Servicio"}</b>
@@ -305,9 +320,11 @@ export default function FichaCliente() {
           </div>
         )}
         <div style={{ marginTop: 22, fontSize: 14, color: "#8ec7ee", fontWeight: 600 }}>
-          {dias > 0
-            ? `Próxima visita sugerida: en ${dias} días`
-            : `Próxima visita sugerida: atrasada ${Math.abs(dias)} días (cada ${INTERVALO_SUGERIDO} días)`}
+          {dias === null
+            ? `Todavía no se ha atendido. La sugerencia aparece después del primer corte.`
+            : dias > 0
+              ? `Próxima visita sugerida: en ${dias} días`
+              : `Próxima visita sugerida: atrasada ${Math.abs(dias)} días (cada ${INTERVALO_SUGERIDO} días)`}
         </div>
       </div>
     </Shell>

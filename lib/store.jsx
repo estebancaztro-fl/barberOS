@@ -4,7 +4,7 @@ import { useSesion } from "@/lib/sesion";
 import {
   listarEquipo, listarServicios, listarSucursales, listarClientes,
   listarReservas, listarIngresos, listarGastos, listarPagosComision,
-  listarHorarios, listarBloqueos,
+  listarHorarios, listarBloqueos, miPlan,
 } from "@/lib/datos";
 
 export const uid = () => Math.random().toString(36).slice(2, 10);
@@ -148,6 +148,16 @@ export function DataProvider({ children }) {
   const [base, setBase] = useState({});
   const [cargandoDatos, setCargandoDatos] = useState(false);
 
+  /* Estado comercial: días de prueba, cupos y si la cuenta puede escribir.
+     Lo calcula la base; acá solo se muestra. */
+  const [plan, setPlan] = useState(null);
+  const recargarPlan = async () => {
+    if (!conSesion) { setPlan(null); return; }
+    const { datos } = await miPlan();
+    if (datos) setPlan(datos);
+  };
+  useEffect(() => { recargarPlan(); }, [conSesion, ses?.perfil?.barberia_id]);
+
   const recargar = async (...modulos) => {
     if (!conSesion) return;
     const cuales = modulos.length ? modulos : Object.keys(CARGADORES);
@@ -232,6 +242,10 @@ export function DataProvider({ children }) {
     pagosComision: dato("pagosComision"),
     horarios: dato("horarios"),
     bloqueos: dato("bloqueos"),
+    plan,
+    recargarPlan,
+    /* Sin base conectada no hay cobro que controlar: la app local no se bloquea */
+    soloLectura: conSesion && plan ? plan.vigente === false : false,
   };
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

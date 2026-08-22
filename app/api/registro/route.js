@@ -1,5 +1,6 @@
 import { clienteAdmin, jsonError } from "@/lib/servidor";
 import { aSlug } from "@/lib/texto";
+import { PLAN } from "@/lib/planes";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -81,7 +82,10 @@ export async function POST(request) {
     const { data: barb, error: errBarberia } = await admin.from("barberias").insert({
       nombre: barberia, slug, correo_contacto: correo,
       plan: "prueba",
-      prueba_hasta: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
+      estado_plan: "prueba",
+      /* La duración de la prueba vive en un solo lugar */
+      prueba_hasta: new Date(Date.now() + PLAN.diasDePrueba * 86400000)
+        .toISOString().slice(0, 10),
     }).select("id, slug").single();
 
     if (errBarberia) return limpiar("No se pudo crear la barbería: " + errBarberia.message);

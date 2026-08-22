@@ -29,6 +29,7 @@ En el panel de Supabase, **SQL Editor** → **New query**. Pega y ejecuta **en e
 9. `migraciones/009_registro.sql` — alta de barberías nuevas y asistente de bienvenida
 10. `migraciones/010_atiende.sql` — separa el rol de quién atiende clientes
 11. `migraciones/011_horarios.sql` — horario de atención por sucursal y bloqueos
+12. `migraciones/012_suscripcion.sql` — prueba de 14 días, cobro y cupo de barberos
 
 Si alguno falla, detente y avísame. No sigas al siguiente.
 
@@ -78,6 +79,12 @@ Corre `pruebas/verificar_horarios.sql`. Comprueba que un domingo cerrado no ofre
 horas, que los bloqueos quiten exactamente las horas que corresponde, que el día libre
 de una persona no cierre la barbería entera y que **una reserva fuera de horario se
 rechace aunque se llame la función directamente**. Debe imprimir `TODO OK`.
+
+Corre `pruebas/verificar_suscripcion.sql`. Comprueba que la prueba dure 14 días, que
+al vencer la cuenta quede en **solo lectura pero sin perder datos**, que los derechos
+del titular (anonimizar) sigan funcionando aunque no haya pago, que **no se pueda
+exceder el cupo de barberos** ni activando `atiende` por la puerta de atrás, y que
+reenviar el mismo aviso de pago no acredite dos meses. Debe imprimir `TODO OK`.
 
 Corre también `pruebas/verificar_privilegios.sql`. Comprueba que **un barbero no pueda
 ascenderse a administrador** ni subirse la comisión, y que la barbería no pueda quedarse
@@ -161,6 +168,10 @@ alguien llame la API directamente, se cumplen igual:
 | El barbero ve solo sus reservas | Política que compara `barbero_id = auth.uid()` |
 | El barbero ve solo sus comisiones | Política en `pagos_comision` |
 | No se reserva fuera del horario ni en un día bloqueado | `publico_reservar` consulta `hora_reservable()` |
+| Una cuenta sin plan vigente no escribe nada | Triggers `exigir_plan_vigente` en reservas, ventas, gastos y clientes |
+| Nadie usa más barberos de los que paga | Trigger `exigir_cupo_barberos` en `perfiles` |
+| Ampliar el cupo solo lo hace el servidor | `fijar_cupo()` sin permiso para `authenticated` |
+| Anonimizar datos funciona aunque no haya pago | Excepción explícita en `exigir_plan_vigente_cliente` |
 | No se guarda foto sin autorización | Trigger `exigir_consentimiento_foto` |
 | No se guarda visagismo sin autorización | Trigger `exigir_consentimiento_visagismo` |
 | La comisión no se puede falsear desde el navegador | Se calcula en `mis_metricas()` dentro de la base |

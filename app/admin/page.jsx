@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import Shell from "@/components/Shell";
 import Modal, { Toggle } from "@/components/Modal";
 import { useApp, uid, fmt, aSlug } from "@/lib/store";
@@ -10,6 +11,7 @@ import {
 import { comprimirImagen } from "@/lib/imagen";
 import { CrearCuenta, RestablecerClave } from "@/components/CuentaEquipo";
 import Horarios from "@/components/Horarios";
+import AmpliarCupo from "@/components/AmpliarCupo";
 import { Plus, Pencil, Trash, Upload, Save, MapPin, Phone, Building, ImgIcon, Copy, X } from "@/components/Icons";
 
 const ROLES = [["barbero", "Barbero"], ["recepcion", "Recepción"], ["admin", "Admin"]];
@@ -22,23 +24,34 @@ export default function Admin() {
   const [copiado, setCopiado] = useState(false);
   const [errorEquipo, setErrorEquipo] = useState("");
   const [errorBarberia, setErrorBarberia] = useState("");
+  const [cupo, setCupo] = useState(null);
   const [nombreTmp, setNombreTmp] = useState(null);
   const [slugTmp, setSlugTmp] = useState(null);
   const [origin, setOrigin] = useState("");
   useEffect(() => setOrigin(window.location.origin), []);
   if (!app) return null;
   const { rol, equipo, servicios, sucursales, barberia, update, conSesion, yo,
-          recargarEquipo, recargar } = app;
+          recargarEquipo, recargar, plan } = app;
 
   /* Con sesión, el equipo se guarda en la base; sin ella, en el navegador */
   const guardarEnEquipo = async (item) => {
     if (!conSesion) { save("equipo", item); return; }
     const r = await guardarMiembro(item.id, item);
+
+    /* Quedarse sin cupo no es un error del usuario: es una decisión de plan.
+       Se le muestra cuánto cuesta y, si acepta, se reintenta lo que quería. */
+    if (r.error && /cupo/i.test(r.error)) {
+      setCupo({ reintentar: () => guardarEnEquipo(item) });
+      return;
+    }
     if (r.error) { setErrorEquipo(r.error); setTimeout(() => setErrorEquipo(""), 4000); return; }
     setErrorEquipo("");
     await recargarEquipo();
     setModal(null);
   };
+
+  /* Si ya no quedan cupos, agregar a alguien más cuesta: se avisa antes */
+  const sinCupo = Boolean(plan && plan.barberos_atendiendo >= plan.barberos_pagados);
 
   if (rol === "barbero") {
     return (
@@ -151,17 +164,27 @@ export default function Admin() {
         {[["equipo", "Equipo"], ["servicios", "Servicios"], ["horarios", "Horarios"], ["sucursales", "Sucursales"], ["barberia", "Barbería"]].map(([id, l]) => (
           <button key={id} className={tab === id ? "on" : ""} onClick={() => setTab(id)}>{l}</button>
         ))}
+        {conSesion && rol === "admin" && (
+          <Link className="tab-link" href="/suscripcion">Suscripción</Link>
+        )}
       </div>
 
       {tab === "equipo" && (
         <>
           <div className="toolbar">
-            <span className="muted">{equipo.length} miembros del equipo</span>
-            <button className="btn dark" onClick={() => setModal(
-              conSesion
-                ? { t: "cuenta" }
-                : { t: "miembro", item: { nombre: "", correo: "", telefono: "", rol: "barbero", comision: 40, activo: true } }
-            )}>
+            <span className="muted">
+              {equipo.length} miembros del equipo
+              {plan && ` · ${plan.barberos_atendiendo} de ${plan.barberos_pagados} cupos atendiendo`}
+            </span>
+            <button className="btn dark" onClick={() => {
+              const abrir = () => setModal(
+                conSesion
+                  ? { t: "cuenta" }
+                  : { t: "miembro", item: { nombre: "", correo: "", telefono: "", rol: "barbero", comision: 40, activo: true } }
+              );
+              /* Sin cupos libres se avisa el costo antes de que llene el formulario */
+              if (conSesion && sinCupo) setCupo({ reintentar: abrir }); else abrir();
+            }}>
               <Plus /> Nuevo
             </button>
           </div>
@@ -342,6 +365,13 @@ export default function Admin() {
       {modal?.t === "cuenta" && (
         <CrearCuenta onClose={() => setModal(null)} onCreado={recargarEquipo} />
       )}
+      {cupo && (
+        <AmpliarCupo
+          onClose={() => setCupo(null)}
+          onListo={async () => { const f = cupo.reintentar; setCupo(null); await f?.(); }}
+        />
+      )}
+
       {modal?.t === "clave" && <RestablecerClave miembro={modal.item} onClose={() => setModal(null)} />}
       {modal?.t === "miembro" && (
         <MiembroModal item={modal.item} onClose={() => setModal(null)}

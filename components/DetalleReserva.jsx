@@ -5,11 +5,12 @@ import Modal from "@/components/Modal";
 import AnalisisRostro from "@/components/AnalisisRostro";
 import { useApp, uid, fmt, hoyISO, finalizarReserva } from "@/lib/store";
 import { FORMAS, registroVisagismo } from "@/lib/rostro";
-import { comprimirImagen } from "@/lib/imagen";
+import SubirFoto from "@/components/SubirFoto";
+import { borrarFoto } from "@/lib/fotos";
 import {
   guardarReserva, guardarCliente, crearCliente, crearIngreso, darConsentimiento,
 } from "@/lib/datos";
-import { Scissors, Clock, Note, ImgIcon, X, Trash, Upload } from "@/components/Icons";
+import { Scissors, Clock, Note, ImgIcon, X, Trash } from "@/components/Icons";
 
 const ESTADOS = [
   ["reservado", "Reservado"],
@@ -23,8 +24,8 @@ export default function DetalleReserva({ reserva, onClose }) {
   const router = useRouter();
   const [escaneando, setEscaneando] = useState(false);
   const [aviso, setAviso] = useState("");
-  const [subiendo, setSubiendo] = useState(false);
   const [verFoto, setVerFoto] = useState(false);
+  const [pedirFoto, setPedirFoto] = useState(false);
   if (!app) return null;
 
   const { update, servicios, equipo, clientes, sinEspacio,
@@ -67,44 +68,16 @@ export default function DetalleReserva({ reserva, onClose }) {
     await recargar("reservas", "clientes", "ingresos");
   };
 
-  /* Foto del corte terminado: se comprime antes de guardar */
-  const subirFoto = async (file) => {
-    if (!file) return;
-    setSubiendo(true);
-    setAviso("");
-    try {
-      const dataUrl = await comprimirImagen(file);
-
-      if (conSesion) {
-        /* La base rechaza la foto sin consentimiento del cliente */
-        if (r.clienteId) await darConsentimiento(barberia.id, r.clienteId, "fotos_corte");
-        const res = await guardarReserva(r.id, { foto: dataUrl });
-        if (res.error) { avisar(res.error); setSubiendo(false); return; }
-        await recargar("reservas");
-      } else {
-        update((d) => { const x = d.reservas.find((y) => y.id === r.id); if (x) x.foto = dataUrl; return d; });
-      }
-      avisar("Foto guardada en el historial del cliente.");
-    } catch {
-      avisar("No se pudo procesar la foto. Inténtalo de nuevo.");
-    }
-    setSubiendo(false);
-  };
-
   const quitarFoto = async () => {
-    if (conSesion) {
-      const res = await guardarReserva(r.id, { foto: null });
-      if (res.error) { avisar(res.error); return; }
-      await recargar("reservas");
-      return;
-    }
-    update((d) => { const x = d.reservas.find((y) => y.id === r.id); if (x) x.foto = null; return d; });
+    const res = await borrarFoto({ reserva: r, conSesion, update, recargar });
+    if (res.error) avisar(res.error);
   };
 
-  /* Finaliza el servicio y ofrece la foto si aún no la tiene */
+  /* Finaliza el servicio y, si todavía no hay foto, la pide de inmediato.
+     Un aviso de texto se ignora; el botón grande no. */
   const finalizar = async () => {
     await cambiarEstado("finalizado");
-    if (!r.foto) avisar("Servicio finalizado. Saca una foto del resultado para el historial.");
+    if (!r.foto) setPedirFoto(true);
   };
 
   /* Guarda el visagismo en la ficha. Si el cliente no estaba registrado, lo crea. */
@@ -213,38 +186,31 @@ export default function DetalleReserva({ reserva, onClose }) {
 
         {/* --- Foto del resultado --- */}
         <div className="foto-box">
-          <div className="scan-cab" style={{ marginBottom: r.foto || subiendo ? 14 : 0 }}>
+          <div className="scan-cab" style={{ marginBottom: r.foto ? 14 : 0 }}>
             <div>
               <b>Foto del resultado</b>
               <div className="muted" style={{ fontSize: 13 }}>
                 {r.foto ? "Guardada en el historial" : "Queda en la ficha del cliente"}
               </div>
             </div>
-            {!r.foto && !subiendo && (
-              <label className="btn dark" style={{ cursor: "pointer" }}>
-                <ImgIcon style={{ width: 16, height: 16 }} /> Tomar foto
-                <input type="file" accept="image/*" capture="environment" style={{ display: "none" }}
-                  onChange={(e) => subirFoto(e.target.files?.[0])} />
-              </label>
+            {!r.foto && (
+              <SubirFoto
+                reserva={r} clase="btn dark" etiqueta="Tomar foto"
+                onListo={() => avisar("Foto guardada en el historial del cliente.")}
+                onError={avisar}
+              />
             )}
           </div>
-
-          {subiendo && (
-            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0" }}>
-              <div className="spinner" style={{ width: 22, height: 22, borderWidth: 2, margin: 0 }} />
-              <span className="muted">Optimizando la foto…</span>
-            </div>
-          )}
 
           {r.foto && (
             <>
               <img src={r.foto} alt="Resultado del corte" className="foto-prev" onClick={() => setVerFoto(true)} />
               <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
-                <label className="btn sm" style={{ cursor: "pointer", flex: 1 }}>
-                  <Upload style={{ width: 15, height: 15 }} /> Cambiar
-                  <input type="file" accept="image/*" capture="environment" style={{ display: "none" }}
-                    onChange={(e) => subirFoto(e.target.files?.[0])} />
-                </label>
+                <SubirFoto
+                  reserva={r} clase="btn sm" etiqueta="Cambiar"
+                  onListo={() => avisar("Foto actualizada.")}
+                  onError={avisar}
+                />
                 <button className="btn sm" onClick={quitarFoto} style={{ color: "var(--red)" }}>
                   <Trash style={{ width: 15, height: 15 }} /> Quitar
                 </button>
@@ -289,6 +255,31 @@ export default function DetalleReserva({ reserva, onClose }) {
           onClose={() => setEscaneando(false)}
           onUsar={guardarAnalisis}
         />
+      )}
+
+      {pedirFoto && !r.foto && (
+        <Modal
+          title="¿Le sacas una foto al resultado?" onClose={() => setPedirFoto(false)}
+          footer={
+            <>
+              <button className="link-btn" onClick={() => setPedirFoto(false)}>Ahora no</button>
+              <SubirFoto
+                reserva={r} clase="btn dark" etiqueta="Tomar foto"
+                onListo={() => { setPedirFoto(false); avisar("Foto guardada en el historial del cliente."); }}
+                onError={(e) => { setPedirFoto(false); avisar(e); }}
+              />
+            </>
+          }
+        >
+          <p style={{ lineHeight: 1.6 }}>
+            Queda en la ficha de <b>{r.clienteNombre}</b> junto al servicio y la
+            fecha. La próxima vez que venga vas a poder repetir el corte exacto
+            sin adivinar.
+          </p>
+          <p className="muted" style={{ marginTop: 12, fontSize: 13.5, lineHeight: 1.6 }}>
+            Sirve de perfil o de tres cuartos, como se vea mejor el trabajo.
+          </p>
+        </Modal>
       )}
 
       {verFoto && r.foto && <VisorFoto src={r.foto} onClose={() => setVerFoto(false)} />}

@@ -3,14 +3,22 @@ import { useState } from "react";
 import Shell from "@/components/Shell";
 import DetalleReserva from "@/components/DetalleReserva";
 import DashboardBarbero from "@/components/DashboardBarbero";
+import Landing from "@/components/Landing";
 import { useApp, fmt, hoyISO } from "@/lib/store";
+import { useSesion } from "@/lib/sesion";
 import { Money, ChevronRight } from "@/components/Icons";
 
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export default function Dashboard() {
   const app = useApp();
+  const ses = useSesion();
   const [detalle, setDetalle] = useState(null);
+
+  /* La portada es landing para quien llega de la calle y dashboard para
+     quien ya tiene cuenta. Sin base configurada se mantiene el modo local
+     de siempre, para poder seguir probando la app sin conexión. */
+  if (ses?.haySupabase && !ses.cargando && !ses.autenticado) return <Landing />;
 
   if (!app) return null;
   /* Cada rol tiene su propia pantalla de inicio */
