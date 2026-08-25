@@ -26,6 +26,7 @@ export default function DetalleReserva({ reserva, onClose }) {
   const [aviso, setAviso] = useState("");
   const [verFoto, setVerFoto] = useState(false);
   const [pedirFoto, setPedirFoto] = useState(false);
+  const [cambiando, setCambiando] = useState(false);
   if (!app) return null;
 
   const { update, servicios, equipo, clientes, sinEspacio,
@@ -43,20 +44,30 @@ export default function DetalleReserva({ reserva, onClose }) {
 
   const avisar = (msg) => { setAviso(msg); setTimeout(() => setAviso(""), 4000); };
 
+  /* ¿Esta reserva ya generó su ingreso? Con eso se decide si corresponde
+     registrarlo, en vez de fiarse del estado anterior en pantalla. */
+  const yaCobrada = app.ingresos.some((i) => i.reservaId === r.id);
+
   const cambiarEstado = async (e) => {
+    if (e === r.estado || cambiando) return;   // el mismo estado no hace nada
+    setCambiando(true);
+
     if (!conSesion) {
-      if (e === "finalizado") return finalizarReserva(update, r);
-      update((d) => { const x = d.reservas.find((y) => y.id === r.id); if (x) x.estado = e; return d; });
+      if (e === "finalizado") finalizarReserva(update, r);
+      else update((d) => { const x = d.reservas.find((y) => y.id === r.id); if (x) x.estado = e; return d; });
+      setCambiando(false);
       return;
     }
 
     const res = await guardarReserva(r.id, { estado: e });
-    if (res.error) { avisar(res.error); return; }
+    if (res.error) { avisar(res.error); setCambiando(false); return; }
 
-    /* Al finalizar se registra el ingreso. Los cortes acumulados y la última
-       visita del cliente los recalcula la base sola. */
-    if (e === "finalizado" && servicio) {
-      await crearIngreso(barberia.id, {
+    /* Al finalizar se registra el ingreso, UNA sola vez. Antes cada toque al
+       botón sumaba otro: seis toques eran seis cobros por el mismo corte y
+       la comisión del barbero quedaba inflada. La base ahora también lo
+       impide, esto solo evita el intento. */
+    if (e === "finalizado" && servicio && !yaCobrada) {
+      const ing = await crearIngreso(barberia.id, {
         fecha: r.fecha,
         concepto: `${servicio.nombre} · ${r.clienteNombre}`,
         metodo: "efectivo",
@@ -64,8 +75,12 @@ export default function DetalleReserva({ reserva, onClose }) {
         barberoId: r.barberoId,
         reservaId: r.id,
       });
+      /* Que ya exista no es un error: significa que alguien se adelantó */
+      if (ing?.error && !/duplicat|ya existe/i.test(ing.error)) avisar(ing.error);
     }
+
     await recargar("reservas", "clientes", "ingresos");
+    setCambiando(false);
   };
 
   const quitarFoto = async () => {
@@ -179,6 +194,9 @@ export default function DetalleReserva({ reserva, onClose }) {
           <div className="chips">
             {ESTADOS.map(([v, l]) => (
               <button key={v} className={"chip" + (r.estado === v ? " on" : "")}
+                /* Bloqueado mientras guarda: el toque repetido era lo que
+                   registraba el mismo corte varias veces */
+                disabled={cambiando || r.estado === v}
                 onClick={() => (v === "finalizado" ? finalizar() : cambiarEstado(v))}>{l}</button>
             ))}
           </div>

@@ -19,14 +19,37 @@ export function SesionProvider({ children }) {
 
   const cargarPerfil = useCallback(async (uid) => {
     if (!uid) { setPerfil(null); return; }
-    const { data, error } = await supabase
-      .from("perfiles")
-      .select("id, nombre, correo, telefono, rol, comision, activo, debe_cambiar_clave, barberia_id, barberias(id, nombre, slug, logo_url, slugs_anteriores, onboarding_completo, recordatorio_activo, recordatorio_minutos, recordatorio_plantilla, whatsapp_modo)")
-      .eq("id", uid)
-      .single();
+
+    /* Se piden primero las columnas nuevas y, si la base todavía no las
+       tiene, se reintenta con las de siempre.
+
+       Sin esto, subir código antes de correr una migración deja a todo el
+       mundo afuera con un mensaje que además miente: la consulta falla por
+       una columna que no existe, no porque al usuario le falte el perfil. */
+    const BASE = "id, nombre, correo, telefono, rol, comision, activo, debe_cambiar_clave, barberia_id";
+    const CAMPOS_BARBERIA = "id, nombre, slug, logo_url, slugs_anteriores, onboarding_completo";
+    const EXTRA_BARBERIA = "recordatorio_activo, recordatorio_minutos, recordatorio_plantilla, whatsapp_modo";
+
+    const pedir = (campos) =>
+      supabase.from("perfiles").select(`${BASE}, barberias(${campos})`).eq("id", uid).single();
+
+    let { data, error } = await pedir(`${CAMPOS_BARBERIA}, ${EXTRA_BARBERIA}`);
+
+    if (error && /column|does not exist|schema cache/i.test(error.message || "")) {
+      console.warn("Faltan migraciones por correr:", error.message);
+      ({ data, error } = await pedir(CAMPOS_BARBERIA));
+    }
 
     if (error) {
-      setError("Tu usuario existe pero no tiene perfil en ninguna barbería.");
+      /* No es lo mismo no tener perfil que no poder consultarlo */
+      const m = (error.message || "").toLowerCase();
+      if (m.includes("permission denied") || m.includes("row-level security")) {
+        setError("El servidor no tiene permiso para leer tu perfil. Revisa las migraciones de permisos.");
+      } else if (error.code === "PGRST116" || m.includes("no rows")) {
+        setError("Tu usuario existe pero no tiene perfil en ninguna barbería.");
+      } else {
+        setError("No se pudo cargar tu perfil: " + (error.message || "error desconocido"));
+      }
       setPerfil(null);
       return;
     }

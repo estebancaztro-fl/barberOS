@@ -265,6 +265,9 @@ input:focus, select:focus, textarea:focus {
 }
 .chip:hover { background: #fff; }
 .chip.on { background: #17171a; color: #fff; border-color: #17171a; }
+/* El estado ya aplicado no se puede volver a tocar, pero se sigue viendo */
+.chip:disabled { cursor: default; }
+.chip:disabled:not(.on) { opacity: 0.45; }
 .chips { display: flex; flex-wrap: wrap; gap: 10px; }
 
 .badge {
