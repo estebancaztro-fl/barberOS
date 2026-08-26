@@ -1202,8 +1202,10 @@ td svg { width: 15px; height: 15px; color: var(--mut); vertical-align: -2px; mar
    el negro; el teléfono no. */
 .lp-luces { position: absolute; inset: 0; overflow: hidden; z-index: 1; }
 .lp-isotipo {
+  /* Anclado ABAJO, no arriba: así su borde inferior coincide siempre con
+     el fin del área oscura, sin la franja de negro que quedaba debajo. */
   position: absolute;
-  left: 50%; top: 43%;
+  left: 50%; bottom: 0;
   width: min(902px, 74vw);
   transform: translateX(-50%);
   pointer-events: none;
