@@ -1219,7 +1219,10 @@ td svg { width: 15px; height: 15px; color: var(--mut); vertical-align: -2px; mar
 }
 
 /* ---------- Secciones claras ---------- */
-.lp-seccion { padding: 120px 0 0; }
+/* Solo padding-top: si se usa el atajo `padding`, esta regla —que va
+   después— borra el padding lateral de .lp-centro y las tarjetas quedan
+   pegadas al borde en celular. */
+.lp-seccion { padding-top: 120px; }
 .lp-seccion h2 {
   font-size: 48px; font-weight: 500; letter-spacing: -0.015em;
   color: #1d1818; text-align: center; margin-bottom: 52px;
@@ -1244,11 +1247,19 @@ td svg { width: 15px; height: 15px; color: var(--mut); vertical-align: -2px; mar
 
 /* ---------- Visagismo ---------- */
 .lp-visagismo {
-  display: grid; grid-template-columns: 1.55fr 1fr; gap: 56px; align-items: center;
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  column-gap: 56px; row-gap: 34px;
+  align-items: center;
   background: #1d1818; color: #fff;
   border-radius: 20px; padding: 45px;
   margin-top: 120px;
 }
+/* Escritorio: texto arriba a la izquierda, aviso debajo, imagen a la
+   derecha ocupando las dos filas */
+.lp-vis-txt { grid-column: 1; grid-row: 1; }
+.lp-aviso   { grid-column: 1; grid-row: 2; }
+.lp-vis-img { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
 .lp-pill.oscura {
   background: rgba(249,164,149,0.57);
   backdrop-filter: blur(22px);
@@ -1275,7 +1286,7 @@ td svg { width: 15px; height: 15px; color: var(--mut); vertical-align: -2px; mar
 .lp-aviso {
   display: flex; gap: 14px; align-items: flex-start;
   background: rgba(217,217,217,0.16);
-  border-radius: 8px; padding: 20px 24px; margin-top: 34px;
+  border-radius: 8px; padding: 20px 24px;
   font-size: 13px; line-height: 1.4;
   font-weight: 300; font-style: italic;
   color: rgba(255,255,255,0.5);
@@ -1344,8 +1355,12 @@ td svg { width: 15px; height: 15px; color: var(--mut); vertical-align: -2px; mar
   .lp-seccion h2, .lp-cierre h2 { font-size: 38px; }
   .lp-card h3 { font-size: 26px; }
   .lp-card p, .lp-checks li { font-size: 17px; }
-  .lp-visagismo { grid-template-columns: 1fr; gap: 34px; padding: 34px; }
-  .lp-vis-img { max-width: 430px; margin: 0 auto; }
+  /* Una sola columna y el orden pedido: texto → rostro → aviso legal */
+  .lp-visagismo { grid-template-columns: 1fr; padding: 34px; }
+  .lp-vis-txt, .lp-vis-img, .lp-aviso { grid-column: 1; grid-row: auto; }
+  .lp-vis-txt { order: 1; }
+  .lp-vis-img { order: 2; max-width: 430px; margin: 0 auto; width: 100%; }
+  .lp-aviso   { order: 3; }
 }
 @media (max-width: 640px) {
   .lp-hero-nav { padding: 24px 0 26px; }
@@ -1356,6 +1371,9 @@ td svg { width: 15px; height: 15px; color: var(--mut); vertical-align: -2px; mar
   .lp-acciones { flex-direction: column; gap: 14px; margin-top: 30px; }
   .lp-hero-figura { margin-bottom: -46px; }
   .lp-luz { filter: blur(70px); }
+  /* En celular el isotipo queda diminuto detrás del teléfono: se agranda
+     para que se lea como fondo, igual que en el diseño */
+  .lp-isotipo { width: 175vw; }
   .lp-seccion { padding-top: 72px; }
   .lp-seccion h2, .lp-cierre h2 { font-size: 27px; margin-bottom: 30px; }
   .lp-grid { grid-template-columns: 1fr; gap: 16px; }

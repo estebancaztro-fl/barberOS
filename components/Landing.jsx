@@ -140,20 +140,23 @@ export default function Landing() {
           <ul className="lp-checks">
             {VISAGISMO.map((x) => <li key={x}>{x}</li>)}
           </ul>
-
-          <div className="lp-aviso">
-            <span className="lp-candado" aria-hidden="true">🔒</span>
-            <span>
-              La foto del rostro <b>nunca se guarda ni se sube a ningún lado</b>.
-              El análisis ocurre en el mismo teléfono y solo queda la
-              recomendación. Los datos del rostro son sensibles bajo la
-              Ley 21.719 y los tratamos como tales.
-            </span>
-          </div>
         </div>
 
+        {/* En celular la imagen va entre el texto y el aviso legal: se
+            entiende antes de qué se está hablando. El orden lo maneja el
+            CSS; en escritorio la imagen ocupa la columna derecha. */}
         <div className="lp-vis-img">
           <Imagen nombre="rostro" alt="Análisis de rostro: forma detectada Cuadrado, 86% de coincidencia" />
+        </div>
+
+        <div className="lp-aviso">
+          <span className="lp-candado" aria-hidden="true">🔒</span>
+          <span>
+            La foto del rostro <b>nunca se guarda ni se sube a ningún lado</b>.
+            El análisis ocurre en el mismo teléfono y solo queda la
+            recomendación. Los datos del rostro son sensibles bajo la
+            Ley 21.719 y los tratamos como tales.
+          </span>
         </div>
       </section>
       </div>
