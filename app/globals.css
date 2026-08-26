@@ -1184,33 +1184,30 @@ td svg { width: 15px; height: 15px; color: var(--mut); vertical-align: -2px; mar
 .lp-nota { font-size: 20px; color: #b6b6b6; font-weight: 500; }
 .lp-nota.bajo { display: block; font-size: 16px; color: rgba(0,0,0,0.5); margin-top: 16px; line-height: 1.6; font-weight: 400; }
 
-/* El teléfono con el isotipo difuminado detrás. La figura se sale del
-   bloque oscuro por abajo (~80px en el diseño): el margen negativo del
-   hero completo lo produce, y overflow visible lo deja asomarse. */
+/* El teléfono se sale del bloque oscuro por abajo (~80px en el diseño).
+   flow-root hace que el margen negativo acorte de verdad el alto del hero:
+   sin él, el margen se colapsaba con el padre y el negro seguía de largo
+   por debajo del teléfono. */
 .lp-hero { overflow: visible; }
-.lp-hero::before {
-  /* el recorte de las luces lo hace esta capa, no el hero, para que el
-     teléfono sí pueda salirse */
-  content: ""; position: absolute; inset: 0; overflow: hidden;
-}
+.lp-hero-contenido { display: flow-root; }
 .lp-hero-figura {
   position: relative;
   max-width: 712px;
   margin: 6px auto -80px;
 }
-.lp-isotipo {
-  position: absolute;
-  left: 50%; top: 46%;
-  width: 127%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  z-index: 0;
-}
 .lp-hero-img { position: relative; z-index: 1; width: 100%; display: block; }
 
-/* Como el teléfono se asoma fuera del hero, las luces necesitan quedar
-   dentro: se recortan con un contenedor propio */
+/* Capa recortada exactamente al bloque oscuro: luces + isotipo. En Figma
+   estos nodos viven dentro del grupo del fondo y se cortan donde termina
+   el negro; el teléfono no. */
 .lp-luces { position: absolute; inset: 0; overflow: hidden; z-index: 1; }
+.lp-isotipo {
+  position: absolute;
+  left: 50%; top: 43%;
+  width: min(902px, 74vw);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
 
 /* ---------- Secciones claras ---------- */
 .lp-seccion { padding: 120px 0 0; }
@@ -1322,11 +1319,16 @@ td svg { width: 15px; height: 15px; color: var(--mut); vertical-align: -2px; mar
 }
 
 /* ---------- Marca y pie ---------- */
-.lp-pie { padding: 72px 0 0; }
+/* La marca gigante cierra la página sin nada debajo, y el texto legal va
+   montado sobre ella, como en el diseño. line-height 0 elimina el espacio
+   fantasma que deja una imagen inline al final. */
+.lp-pie { position: relative; padding: 72px 0 0; line-height: 0; }
 .lp-marca { width: 100%; max-width: 1416px; margin: 0 auto; display: block; }
 .lp-legal {
-  text-align: center;
-  padding: 26px 16px 36px; font-size: 13px; color: var(--mut);
+  position: absolute;
+  left: 0; right: 0; bottom: 26px;
+  text-align: center; line-height: 1.5;
+  font-size: 13px; color: #55555f;
 }
 
 @media (max-width: 980px) {

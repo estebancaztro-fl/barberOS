@@ -65,11 +65,16 @@ export default function Landing() {
           luces (celeste y coral), el isotipo coral difuminado y encima el
           teléfono, que se sale del bloque oscuro por abajo. */}
       <header className="lp-hero">
-        {/* Las luces viven en su propio contenedor recortado: el hero deja
-            el desborde visible para que el teléfono se asome por abajo */}
+        {/* Como en el archivo de Figma: las luces y el isotipo viven DENTRO
+            del bloque oscuro y se recortan exacto donde termina el negro.
+            El teléfono vive fuera y se asoma a la parte clara. */}
         <div className="lp-luces" aria-hidden="true">
           <div className="lp-luz celeste" />
           <div className="lp-luz coral" />
+          <picture>
+            <source srcSet="/landing/isotipo-difuso.webp" type="image/webp" />
+            <img className="lp-isotipo" src="/landing/isotipo-difuso.png" alt="" />
+          </picture>
         </div>
 
         <div className="lp-hero-contenido">
@@ -94,12 +99,6 @@ export default function Landing() {
           </div>
 
           <div className="lp-hero-figura">
-            {/* El isotipo difuminado va pre-desenfocado como imagen: hacerlo
-                con CSS en vivo costaría rendimiento en celulares */}
-            <picture>
-              <source srcSet="/landing/isotipo-difuso.webp" type="image/webp" />
-              <img className="lp-isotipo" src="/landing/isotipo-difuso.png" alt="" aria-hidden="true" />
-            </picture>
             {/* Sin lazy: es lo primero que se ve */}
             <picture>
               <source srcSet="/landing/hero.webp" type="image/webp" />
