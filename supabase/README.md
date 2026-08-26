@@ -31,6 +31,8 @@ En el panel de Supabase, **SQL Editor** → **New query**. Pega y ejecuta **en e
 11. `migraciones/011_horarios.sql` — horario de atención por sucursal y bloqueos
 12. `migraciones/012_suscripcion.sql` — prueba de 14 días, cobro y cupo de barberos
 13. `migraciones/013_mensajes.sql` — recordatorios y campañas a clientes
+14. `migraciones/014_ingreso_unico.sql` — un solo ingreso por corte
+15. `migraciones/015_comision_admin.sql` — el dueño fija su propia comisión
 
 Si alguno falla, detente y avísame. No sigas al siguiente.
 
@@ -176,4 +178,7 @@ alguien llame la API directamente, se cumplen igual:
 | No se guarda foto sin autorización | Trigger `exigir_consentimiento_foto` |
 | No se guarda visagismo sin autorización | Trigger `exigir_consentimiento_visagismo` |
 | La comisión no se puede falsear desde el navegador | Se calcula en `mis_metricas()` dentro de la base |
+| Un barbero no se sube su propia comisión | Trigger `proteger_cambios_de_rol` (el administrador sí puede: es el dueño) |
+| Nadie cambia su propio rol, ni el administrador | Mismo trigger |
+| Un corte no se puede cobrar dos veces | Índice único `ingresos_una_por_reserva` |
 | Queda rastro de exportaciones y borrados | `registrar_actividad()` |

@@ -1,10 +1,12 @@
 -- ============================================================
 -- ¿Puede un barbero subirse los permisos?
 --
--- Comprueba que nadie pueda ascenderse a administrador, subirse la comisión,
--- mudarse a otra barbería ni dejar la barbería sin administradores.
+-- Comprueba que nadie pueda ascenderse a administrador, que un barbero no se
+-- suba la comisión, que nadie se mude a otra barbería ni deje la barbería sin
+-- administradores. El administrador sí fija su propia comisión —es el dueño—
+-- pero tampoco cambia su propio rol.
 --
--- Ejecutar DESPUÉS de 006_cuentas.sql. Debe imprimir TODO OK.
+-- Ejecutar DESPUÉS de 015_comision_admin.sql. Debe imprimir TODO OK.
 -- ============================================================
 
 do $$
@@ -86,20 +88,37 @@ begin
   raise notice 'OK · no alcanza perfiles de otra barbería (RLS)';
 
   -- ============================================================
-  -- El administrador tampoco puede cambiarse a sí mismo
+  -- El administrador sí fija su propia comisión, pero no su rol
   -- ============================================================
+  -- Es el caso del dueño que corta pelo y se queda con el 100% de lo suyo.
+  -- Prohibírselo no protegía nada: ya puede fijar la de cualquier otro y
+  -- podría crear un segundo administrador para que se la suba.
   perform set_config('request.jwt.claims', json_build_object('sub', uAdmin::text)::text, true);
 
   begin
-    update perfiles set comision = 99 where id = uAdmin;
+    update perfiles set comision = 100 where id = uAdmin;
     select comision into com_final from perfiles where id = uAdmin;
-    if com_final = 99 then
-      raise warning 'FALLA · el administrador se cambió su propia comisión'; fallos := fallos + 1;
+    if com_final = 100 then
+      raise notice 'OK · el administrador fija su propia comisión';
     else
-      raise notice 'OK · el administrador tampoco se cambia su comisión';
+      raise warning 'FALLA · el administrador no pudo fijar su comisión'; fallos := fallos + 1;
     end if;
   exception when others then
-    raise notice 'OK · el administrador tampoco se cambia su comisión';
+    raise warning 'FALLA · el administrador no pudo fijar su comisión: %', sqlerrm;
+    fallos := fallos + 1;
+  end;
+
+  -- El rol propio sigue bloqueado, también para él
+  begin
+    update perfiles set rol = 'barbero' where id = uAdmin;
+    select rol into rol_final from perfiles where id = uAdmin;
+    if rol_final = 'admin' then
+      raise notice 'OK · el administrador no cambia su propio rol';
+    else
+      raise warning 'FALLA · el administrador se cambió el rol a sí mismo'; fallos := fallos + 1;
+    end if;
+  exception when others then
+    raise notice 'OK · el administrador no cambia su propio rol';
   end;
 
   -- Pero sí puede administrar a su equipo
