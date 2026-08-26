@@ -59,38 +59,59 @@ const VISAGISMO = [
 export default function Landing() {
   return (
     <div className="lp">
-      {/* ================= Portada ================= */}
+      {/* ================= Portada =================
+          A todo el ancho, sin bordes redondeados. Las capas van en este
+          orden, igual que en el archivo de Figma: fondo #1d1818, las dos
+          luces (celeste y coral), el isotipo coral difuminado y encima el
+          teléfono, que se sale del bloque oscuro por abajo. */}
       <header className="lp-hero">
-        <div className="lp-hero-nav">
-          <img src="/barberos-logo.svg" alt="BarberOS" className="lp-logo" />
-          <Link className="lp-entrar" href="/login">Entrar</Link>
+        {/* Las luces viven en su propio contenedor recortado: el hero deja
+            el desborde visible para que el teléfono se asome por abajo */}
+        <div className="lp-luces" aria-hidden="true">
+          <div className="lp-luz celeste" />
+          <div className="lp-luz coral" />
         </div>
 
-        <span className="lp-pill">Creado con barberos, para barberos</span>
+        <div className="lp-hero-contenido">
+          <div className="lp-hero-nav">
+            <img src="/barberos-logo.svg" alt="BarberOS" className="lp-logo" />
+            <Link className="lp-entrar" href="/login">Entrar</Link>
+          </div>
 
-        <h1>
-          <span className="lp-suave">Cualquier agenda te ordena la barbería.</span>
-          <br />
-          BarberOS revaloriza la industria.
-        </h1>
+          <span className="lp-pill">Creado con barberos, para barberos</span>
 
-        <div className="lp-acciones">
-          <Link className="lp-cta" href="/registro">
-            Empezar {PLAN.diasDePrueba} días gratis
-          </Link>
-          <span className="lp-nota">Sin agregar una tarjeta.</span>
+          <h1>
+            <span className="lp-celeste">Cualquier agenda te ordena la barbería.</span>
+            <br />
+            <b>BarberOS revaloriza la industria.</b>
+          </h1>
+
+          <div className="lp-acciones">
+            <Link className="lp-cta" href="/registro">
+              Empezar {PLAN.diasDePrueba} días gratis
+            </Link>
+            <span className="lp-nota">Sin agregar una tarjeta.</span>
+          </div>
+
+          <div className="lp-hero-figura">
+            {/* El isotipo difuminado va pre-desenfocado como imagen: hacerlo
+                con CSS en vivo costaría rendimiento en celulares */}
+            <picture>
+              <source srcSet="/landing/isotipo-difuso.webp" type="image/webp" />
+              <img className="lp-isotipo" src="/landing/isotipo-difuso.png" alt="" aria-hidden="true" />
+            </picture>
+            {/* Sin lazy: es lo primero que se ve */}
+            <picture>
+              <source srcSet="/landing/hero.webp" type="image/webp" />
+              <img className="lp-hero-img" src="/landing/hero.png"
+                alt="BarberOS en el teléfono, junto a las herramientas del barbero" />
+            </picture>
+          </div>
         </div>
-
-        {/* Sin lazy: es lo primero que se ve */}
-        <picture>
-          <source srcSet="/landing/hero.webp" type="image/webp" />
-          <img className="lp-hero-img" src="/landing/hero.png"
-            alt="BarberOS en el teléfono, junto a las herramientas del barbero" />
-        </picture>
       </header>
 
       {/* ================= Módulos ================= */}
-      <section className="lp-seccion">
+      <section className="lp-seccion lp-centro">
         <h2>Toda tu barbería en un mismo lugar</h2>
         <div className="lp-grid">
           {MODULOS.map(({ Icon, titulo, texto, extra }) => (
@@ -105,6 +126,7 @@ export default function Landing() {
       </section>
 
       {/* ================= Visagismo ================= */}
+      <div className="lp-centro">
       <section className="lp-visagismo">
         <div className="lp-vis-txt">
           <span className="lp-pill oscura">Solo en BarberOS</span>
@@ -135,6 +157,7 @@ export default function Landing() {
           <Imagen nombre="rostro" alt="Análisis de rostro: forma detectada Cuadrado, 86% de coincidencia" />
         </div>
       </section>
+      </div>
 
       {/* ================= El panel ================= */}
       <section className="lp-panel">
@@ -142,7 +165,7 @@ export default function Landing() {
       </section>
 
       {/* ================= Precio ================= */}
-      <section className="lp-seccion" id="precio">
+      <section className="lp-seccion lp-centro" id="precio">
         <h2>Un solo plan, sin letra chica</h2>
 
         <div className="lp-precio">
@@ -172,6 +195,7 @@ export default function Landing() {
       </section>
 
       {/* ================= Cierre ================= */}
+      <div className="lp-centro">
       <section className="lp-cierre">
         <h2>Crea tu barbería en 2 minutos</h2>
         <p>
@@ -180,6 +204,7 @@ export default function Landing() {
         </p>
         <Link className="lp-cta claro" href="/registro">Crear mi barbería</Link>
       </section>
+      </div>
 
       {/* ================= Marca ================= */}
       <footer className="lp-pie">

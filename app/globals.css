@@ -1,4 +1,6 @@
-@import url("https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400..800&display=swap");
+/* 300..800: el diseño de la landing usa Light (300) en la pastilla del hero
+   y en el aviso legal del visagismo */
+@import url("https://fonts.googleapis.com/css2?family=Google+Sans+Flex:ital,wght@0,300..800;1,300..800&display=swap");
 
 :root {
   /* Paleta extraída de los mockups */
@@ -1095,223 +1097,272 @@ td svg { width: 15px; height: 15px; color: var(--mut); vertical-align: -2px; mar
 }
 
 /* ============================================================
-   Landing
-   Fondo claro, dos bloques oscuros de contraste (portada y visagismo)
-   y la marca gigante al cierre. Escrita para celular primero.
+   Landing — colores y medidas tomados del archivo de Figma
+   "landing page BarberOS" (frame Desktop-1, 1440px).
+   Hero a todo el ancho #1d1818; luces celeste #94c0e3 y coral
+   #f9a495 difuminadas; isotipo #ffa894 detrás del teléfono.
    ============================================================ */
 
-.lp { max-width: 1180px; margin: 0 auto; padding: 22px 20px 0; }
+.lp { width: 100%; }
+.lp picture { display: block; }
 
-/* ---------- Portada ---------- */
+/* Ancho de contenido del diseño: 1270 sobre lienzo de 1440 */
+.lp-centro { max-width: 1270px; margin: 0 auto; padding: 0 20px; }
+
+/* ---------- Hero ---------- */
 .lp-hero {
-  /* Tres capas: el calor coral concentrado detrás del teléfono, una difusa
-     que lo abre hacia los lados, y el fondo casi negro pero cálido. Con un
-     solo degradado el hero se veía plano y negro, que era el problema. */
-  background:
-    radial-gradient(46% 34% at 50% 70%, rgba(255,150,116,0.62) 0%, rgba(255,150,116,0) 66%),
-    radial-gradient(78% 52% at 50% 76%, rgba(240,124,120,0.34) 0%, rgba(240,124,120,0) 70%),
-    radial-gradient(120% 80% at 50% 100%, rgba(190,90,110,0.20) 0%, rgba(190,90,110,0) 65%),
-    #141113;
-  border-radius: 28px;
-  padding: 26px 32px 0;
-  text-align: center;
-  overflow: hidden;
+  background: #1d1818;
   position: relative;
+  overflow: hidden;
+  text-align: center;
 }
-/* Núcleo caliente justo bajo las herramientas, para que el resplandor
-   nazca de ahí y no parezca un degradado pegado encima */
-.lp-hero::after {
-  content: "";
+.lp-hero-contenido {
+  position: relative; z-index: 3;
+  max-width: 1270px; margin: 0 auto; padding: 0 20px;
+}
+
+/* Las dos luces del fondo, como en el archivo: elipses con desenfoque */
+.lp-luz {
   position: absolute;
-  left: 50%; bottom: -60px;
-  width: min(760px, 88%); height: 420px;
-  transform: translateX(-50%);
-  background: radial-gradient(50% 50% at 50% 50%, rgba(255,178,140,0.42) 0%, rgba(255,178,140,0) 68%);
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.63;
   pointer-events: none;
   z-index: 1;
+}
+.lp-luz.celeste {
+  background: #94c0e3;
+  width: 44%; height: 58%;
+  left: 6%; bottom: -22%;
+}
+.lp-luz.coral {
+  background: rgba(249,164,149,0.57);
+  width: 42%; height: 62%;
+  right: 2%; bottom: -12%;
 }
 
 .lp-hero-nav {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 16px; margin-bottom: 34px;
-  position: relative; z-index: 2;
+  gap: 16px; padding: 44px 0 40px;
 }
-.lp-logo { height: 22px; width: auto; display: block; }
+.lp-logo { height: 33px; width: auto; display: block; }
 .lp-entrar {
-  color: rgba(255,255,255,0.72);
-  font-size: 15px; font-weight: 600;
-  padding: 9px 18px; border-radius: var(--r-full);
-  border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.65); font-size: 15px; font-weight: 500;
 }
-.lp-entrar:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
+.lp-entrar:hover { color: #fff; }
 
 .lp-pill {
-  display: inline-block; position: relative; z-index: 2;
-  background: rgba(255,255,255,0.08);
-  color: rgba(255,255,255,0.72);
-  border-radius: var(--r-full); padding: 8px 18px;
-  font-size: 13px; font-weight: 500;
+  display: inline-block;
+  background: rgba(255,255,255,0.14);
+  backdrop-filter: blur(4px);
+  color: #e9e9e9;
+  border-radius: 100px; padding: 8px 22px;
+  font-size: 17px; font-weight: 300;
 }
-.lp-pill.oscura { background: rgba(238,141,150,0.18); color: var(--pink); }
 
 .lp-hero h1 {
-  position: relative; z-index: 2;
-  margin: 22px auto 0; max-width: 760px;
-  font-size: 40px; line-height: 1.22; font-weight: 600;
-  letter-spacing: -0.02em; color: #fff;
+  margin: 26px auto 0; max-width: 830px;
+  font-size: 48px; line-height: 1.05;
+  letter-spacing: -0.01em;
+  font-weight: 400; color: #fff;
 }
-.lp-hero .lp-suave { color: rgba(255,255,255,0.55); font-weight: 500; }
+.lp-celeste { color: #aec8e0; font-weight: 400; }
+.lp-hero h1 b { font-weight: 600; }
 
 .lp-acciones {
-  position: relative; z-index: 2;
   display: flex; align-items: center; justify-content: center;
-  gap: 18px; flex-wrap: wrap; margin-top: 28px;
+  gap: 22px; flex-wrap: wrap; margin-top: 40px;
 }
-.lp-nota { font-size: 14px; color: rgba(255,255,255,0.55); font-weight: 500; }
-.lp-nota.bajo { display: block; color: var(--mut); margin-top: 16px; line-height: 1.6; }
-
 .lp-cta {
   display: inline-flex; align-items: center; justify-content: center;
-  background: #fff; color: var(--ink);
-  padding: 15px 30px; border-radius: var(--r-sm);
-  font-size: 16px; font-weight: 600;
+  background: #fff; color: #1d1818;
+  padding: 15px 32px; border-radius: 13px;
+  font-size: 20px; font-weight: 500;
   transition: transform 0.12s, box-shadow 0.15s;
 }
-.lp-cta:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,0,0,0.25); }
-.lp-cta.ancho { width: 100%; background: #17171a; color: #fff; }
-.lp-cta.claro { background: #fff; color: var(--ink); }
+.lp-cta:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+.lp-nota { font-size: 20px; color: #b6b6b6; font-weight: 500; }
+.lp-nota.bajo { display: block; font-size: 16px; color: rgba(0,0,0,0.5); margin-top: 16px; line-height: 1.6; font-weight: 400; }
 
-.lp-hero-img {
-  position: relative; z-index: 2;
-  display: block; width: 100%; max-width: 620px;
-  margin: 30px auto -4px;
+/* El teléfono con el isotipo difuminado detrás. La figura se sale del
+   bloque oscuro por abajo (~80px en el diseño): el margen negativo del
+   hero completo lo produce, y overflow visible lo deja asomarse. */
+.lp-hero { overflow: visible; }
+.lp-hero::before {
+  /* el recorte de las luces lo hace esta capa, no el hero, para que el
+     teléfono sí pueda salirse */
+  content: ""; position: absolute; inset: 0; overflow: hidden;
 }
+.lp-hero-figura {
+  position: relative;
+  max-width: 712px;
+  margin: 6px auto -80px;
+}
+.lp-isotipo {
+  position: absolute;
+  left: 50%; top: 46%;
+  width: 127%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 0;
+}
+.lp-hero-img { position: relative; z-index: 1; width: 100%; display: block; }
+
+/* Como el teléfono se asoma fuera del hero, las luces necesitan quedar
+   dentro: se recortan con un contenedor propio */
+.lp-luces { position: absolute; inset: 0; overflow: hidden; z-index: 1; }
 
 /* ---------- Secciones claras ---------- */
-.lp-seccion { padding: 76px 0 0; }
+.lp-seccion { padding: 120px 0 0; }
 .lp-seccion h2 {
-  font-size: 32px; font-weight: 600; letter-spacing: -0.015em;
-  text-align: center; margin-bottom: 34px;
+  font-size: 48px; font-weight: 500; letter-spacing: -0.015em;
+  color: #1d1818; text-align: center; margin-bottom: 52px;
 }
 
-.lp-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.lp-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 37px; }
 .lp-card {
   background: #fff;
-  border-radius: 22px; padding: 30px;
+  border-radius: 20px; padding: 45px;
   box-shadow: 0 1px 3px rgba(23,23,26,0.05);
 }
 .lp-icono {
-  width: 46px; height: 46px; border-radius: 14px;
+  width: 79px; height: 80px; border-radius: 15px;
   background: #17171a; color: #fff;
   display: flex; align-items: center; justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 34px;
 }
-.lp-icono svg { width: 21px; height: 21px; }
-.lp-card h3 { font-size: 19px; font-weight: 600; margin-bottom: 10px; }
-.lp-card p { font-size: 14.5px; line-height: 1.65; color: #55555f; }
-.lp-extra { margin-top: 12px; color: var(--pink) !important; font-weight: 600; }
+.lp-icono svg { width: 40px; height: 40px; }
+.lp-card h3 { font-size: 32px; font-weight: 500; color: #1d1818; margin-bottom: 12px; }
+.lp-card p { font-size: 20px; line-height: 1.35; font-weight: 400; color: #1d1818; }
+.lp-extra { margin-top: 14px; color: #87badf !important; font-size: 13px !important; font-weight: 500 !important; }
 
 /* ---------- Visagismo ---------- */
 .lp-visagismo {
-  display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 44px; align-items: center;
-  background: #141314; color: #fff;
-  border-radius: 26px; padding: 46px;
-  margin-top: 76px;
+  display: grid; grid-template-columns: 1.55fr 1fr; gap: 56px; align-items: center;
+  background: #1d1818; color: #fff;
+  border-radius: 20px; padding: 45px;
+  margin-top: 120px;
 }
+.lp-pill.oscura {
+  background: rgba(249,164,149,0.57);
+  backdrop-filter: blur(22px);
+  color: #fff; font-size: 16px; font-weight: 500;
+  padding: 8px 23px;
+}
+.lp-pill.oscura b { font-weight: 600; }
 .lp-vis-txt h2 {
-  font-size: 32px; font-weight: 600; margin: 18px 0 16px;
-  letter-spacing: -0.015em;
+  font-size: 36px; font-weight: 500; margin: 22px 0 18px;
+  letter-spacing: -0.01em; color: #fff;
 }
-.lp-vis-txt p { font-size: 15px; line-height: 1.7; color: rgba(255,255,255,0.7); }
+.lp-vis-txt p { font-size: 18px; line-height: 1.5; font-weight: 400; color: #fff; }
 
-.lp-checks { list-style: none; margin: 22px 0 0; display: flex; flex-direction: column; gap: 11px; }
+.lp-checks { list-style: none; margin: 26px 0 0; display: flex; flex-direction: column; gap: 15px; }
 .lp-checks li {
-  position: relative; padding-left: 28px;
-  font-size: 14.5px; line-height: 1.55; color: rgba(255,255,255,0.88);
+  position: relative; padding-left: 35px;
+  font-size: 20px; line-height: 1.3; font-weight: 400; color: #e9e9e9;
 }
 .lp-checks li::before {
-  content: "✓"; position: absolute; left: 4px; top: -1px;
-  color: var(--green); font-size: 14px; font-weight: 700;
+  content: "✓"; position: absolute; left: 4px; top: 0;
+  color: #07994d; font-size: 17px; font-weight: 700;
 }
 
 .lp-aviso {
-  display: flex; gap: 12px; align-items: flex-start;
-  background: rgba(255,255,255,0.06);
-  border-radius: 14px; padding: 16px 18px; margin-top: 26px;
-  font-size: 13px; line-height: 1.6; color: rgba(255,255,255,0.62);
+  display: flex; gap: 14px; align-items: flex-start;
+  background: rgba(217,217,217,0.16);
+  border-radius: 8px; padding: 20px 24px; margin-top: 34px;
+  font-size: 13px; line-height: 1.4;
+  font-weight: 300; font-style: italic;
+  color: rgba(255,255,255,0.5);
 }
-.lp-aviso b { color: rgba(255,255,255,0.92); font-weight: 600; }
-.lp-candado { font-size: 14px; line-height: 1.4; flex-shrink: 0; }
+.lp-aviso b { color: rgba(255,255,255,0.85); font-weight: 500; }
+.lp-candado { font-size: 15px; font-style: normal; flex-shrink: 0; }
 
 .lp-vis-img img { width: 100%; height: auto; display: block; border-radius: 18px; }
 
 /* ---------- El panel ---------- */
-/* Se sale del contenedor a propósito: la captura se ve más grande y las
-   pantallas de los costados quedan cortadas, que es el efecto buscado. */
-.lp-panel {
-  margin: 84px calc(50% - 50vw) 0;
-  padding: 0 12px;
-  overflow: hidden;
-}
-.lp-panel img { width: 100%; max-width: 1500px; margin: 0 auto; display: block; }
+.lp-panel { margin-top: 120px; overflow: hidden; }
+.lp-panel img { width: 100%; max-width: 1557px; margin: 0 auto; display: block; }
 
 /* ---------- Precio ---------- */
 .lp-precio {
   background: #fff;
-  border-radius: 26px; padding: 40px;
-  max-width: 540px; margin: 0 auto;
-  box-shadow: 0 4px 20px rgba(23,23,26,0.07);
+  border-radius: 24px; padding: 63px;
+  max-width: 791px; margin: 0 auto;
 }
-.lp-precio-cifra { display: flex; align-items: baseline; gap: 10px; margin-bottom: 26px; }
-.lp-precio-cifra b { font-size: 46px; font-weight: 600; letter-spacing: -0.03em; }
-.lp-precio-cifra span { color: var(--mut); font-size: 16px; }
+.lp-precio-cifra { display: flex; align-items: baseline; gap: 17px; margin-bottom: 46px; }
+.lp-precio-cifra b { font-size: 70px; font-weight: 600; letter-spacing: -0.03em; color: #1d1818; }
+.lp-precio-cifra span { color: #b6b6b6; font-size: 24px; font-weight: 600; }
 
-.lp-precio .lp-checks { margin-bottom: 24px; }
-.lp-precio .lp-checks li { color: #3a3a42; }
+.lp-precio .lp-checks { margin: 0 0 46px; }
+.lp-precio .lp-checks li { color: #1d1818; font-weight: 500; }
 
 .lp-precio-extra {
-  background: #f4f5f7; border-radius: 12px; padding: 15px 17px;
-  font-size: 13px; line-height: 1.6; color: #55555f; margin-bottom: 24px;
+  background: rgba(217,217,217,0.3); border-radius: 8px; padding: 20px 33px;
+  font-size: 16px; line-height: 1.15; font-weight: 500; color: #1d1818;
+  margin-bottom: 34px;
+}
+.lp-cta.ancho {
+  width: 100%; background: #1d1818; color: #fff;
+  border-radius: 10px; padding: 18px 32px;
+  font-size: 24px; font-weight: 600;
 }
 
 /* ---------- Cierre ---------- */
 .lp-cierre {
-  background: #141314; color: #fff;
-  border-radius: 26px; padding: 56px 40px; text-align: center;
-  margin-top: 84px;
+  background: #1d1818; color: #fff;
+  border-radius: 20px; padding: 46px 40px 62px; text-align: center;
+  margin-top: 120px;
 }
-.lp-cierre h2 { font-size: 32px; font-weight: 600; margin-bottom: 14px; letter-spacing: -0.015em; }
-.lp-cierre p { color: rgba(255,255,255,0.68); max-width: 420px; margin: 0 auto 30px; line-height: 1.6; }
+.lp-cierre h2 { font-size: 48px; font-weight: 500; margin-bottom: 22px; letter-spacing: -0.01em; }
+.lp-cierre p { color: #fff; font-size: 20px; font-weight: 400; max-width: 620px; margin: 0 auto 44px; line-height: 1.15; }
+.lp-cta.claro {
+  background: #fff; color: #1d1818;
+  border-radius: 10px; padding: 12px 26px;
+  font-size: 24px; font-weight: 600;
+}
 
-/* ---------- Marca ---------- */
-.lp-pie { padding: 60px 0 0; }
-.lp-marca { width: 100%; max-width: 1100px; margin: 0 auto; display: block; }
+/* ---------- Marca y pie ---------- */
+.lp-pie { padding: 72px 0 0; }
+.lp-marca { width: 100%; max-width: 1416px; margin: 0 auto; display: block; }
 .lp-legal {
   text-align: center;
-  padding: 26px 4px 34px; font-size: 13px; color: var(--mut);
+  padding: 26px 16px 36px; font-size: 13px; color: var(--mut);
 }
 
-@media (max-width: 900px) {
-  .lp-visagismo { grid-template-columns: 1fr; gap: 30px; padding: 34px; }
-  .lp-vis-img { max-width: 420px; margin: 0 auto; }
+@media (max-width: 980px) {
+  .lp-hero h1 { font-size: 38px; }
+  .lp-seccion h2, .lp-cierre h2 { font-size: 38px; }
+  .lp-card h3 { font-size: 26px; }
+  .lp-card p, .lp-checks li { font-size: 17px; }
+  .lp-visagismo { grid-template-columns: 1fr; gap: 34px; padding: 34px; }
+  .lp-vis-img { max-width: 430px; margin: 0 auto; }
 }
 @media (max-width: 640px) {
-  .lp { padding: 14px 14px 0; }
-  .lp-hero { padding: 20px 20px 0; border-radius: 22px; }
-  .lp-hero h1 { font-size: 27px; }
-  .lp-acciones { flex-direction: column; gap: 12px; }
-  .lp-cta { width: 100%; }
-  .lp-seccion { padding-top: 56px; }
-  .lp-seccion h2, .lp-vis-txt h2, .lp-cierre h2 { font-size: 24px; }
-  .lp-grid { grid-template-columns: 1fr; }
-  .lp-card { padding: 24px; border-radius: 18px; }
-  .lp-visagismo { margin-top: 56px; padding: 26px; }
-  .lp-panel { margin-top: 56px; }
-  .lp-precio { padding: 26px; }
-  .lp-precio-cifra b { font-size: 38px; }
-  .lp-cierre { margin-top: 56px; padding: 40px 24px; }
+  .lp-hero-nav { padding: 24px 0 26px; }
+  .lp-logo { height: 26px; }
+  .lp-pill { font-size: 14px; }
+  .lp-hero h1 { font-size: 29px; }
+  .lp-cta { width: 100%; font-size: 17px; }
+  .lp-nota { font-size: 15px; }
+  .lp-acciones { flex-direction: column; gap: 14px; margin-top: 30px; }
+  .lp-hero-figura { margin-bottom: -46px; }
+  .lp-luz { filter: blur(70px); }
+  .lp-seccion { padding-top: 72px; }
+  .lp-seccion h2, .lp-cierre h2 { font-size: 27px; margin-bottom: 30px; }
+  .lp-grid { grid-template-columns: 1fr; gap: 16px; }
+  .lp-card { padding: 26px; }
+  .lp-icono { width: 56px; height: 56px; margin-bottom: 20px; }
+  .lp-icono svg { width: 28px; height: 28px; }
+  .lp-card h3 { font-size: 21px; }
+  .lp-card p, .lp-checks li { font-size: 15px; }
+  .lp-visagismo { margin-top: 72px; padding: 24px; }
+  .lp-vis-txt h2 { font-size: 26px; }
+  .lp-vis-txt p { font-size: 15px; }
+  .lp-panel { margin-top: 72px; }
+  .lp-precio { padding: 28px; }
+  .lp-precio-cifra b { font-size: 44px; }
+  .lp-precio-cifra span { font-size: 18px; }
+  .lp-cta.ancho, .lp-cta.claro { font-size: 18px; }
+  .lp-cierre { margin-top: 72px; padding: 34px 22px 40px; }
+  .lp-cierre p { font-size: 16px; }
 }
-
-/* <picture> es en línea por defecto y descuadra el centrado de las imágenes */
-.lp picture { display: block; }
-.lp-hero picture { position: relative; z-index: 2; }
