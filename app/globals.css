@@ -1104,22 +1104,31 @@ td svg { width: 15px; height: 15px; color: var(--mut); vertical-align: -2px; mar
 
 /* ---------- Portada ---------- */
 .lp-hero {
-  background: #141314;
+  /* Tres capas: el calor coral concentrado detrás del teléfono, una difusa
+     que lo abre hacia los lados, y el fondo casi negro pero cálido. Con un
+     solo degradado el hero se veía plano y negro, que era el problema. */
+  background:
+    radial-gradient(46% 34% at 50% 70%, rgba(255,150,116,0.62) 0%, rgba(255,150,116,0) 66%),
+    radial-gradient(78% 52% at 50% 76%, rgba(240,124,120,0.34) 0%, rgba(240,124,120,0) 70%),
+    radial-gradient(120% 80% at 50% 100%, rgba(190,90,110,0.20) 0%, rgba(190,90,110,0) 65%),
+    #141113;
   border-radius: 28px;
   padding: 26px 32px 0;
   text-align: center;
   overflow: hidden;
   position: relative;
 }
-/* El resplandor coral detrás del teléfono */
+/* Núcleo caliente justo bajo las herramientas, para que el resplandor
+   nazca de ahí y no parezca un degradado pegado encima */
 .lp-hero::after {
   content: "";
   position: absolute;
-  left: 50%; bottom: 0;
-  width: 900px; height: 620px;
+  left: 50%; bottom: -60px;
+  width: min(760px, 88%); height: 420px;
   transform: translateX(-50%);
-  background: radial-gradient(50% 50% at 50% 55%, rgba(238,141,150,0.55) 0%, rgba(238,141,150,0) 70%);
+  background: radial-gradient(50% 50% at 50% 50%, rgba(255,178,140,0.42) 0%, rgba(255,178,140,0) 68%);
   pointer-events: none;
+  z-index: 1;
 }
 
 .lp-hero-nav {
@@ -1278,7 +1287,7 @@ td svg { width: 15px; height: 15px; color: var(--mut); vertical-align: -2px; mar
 .lp-pie { padding: 60px 0 0; }
 .lp-marca { width: 100%; max-width: 1100px; margin: 0 auto; display: block; }
 .lp-legal {
-  display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  text-align: center;
   padding: 26px 4px 34px; font-size: 13px; color: var(--mut);
 }
 
@@ -1301,5 +1310,8 @@ td svg { width: 15px; height: 15px; color: var(--mut); vertical-align: -2px; mar
   .lp-precio { padding: 26px; }
   .lp-precio-cifra b { font-size: 38px; }
   .lp-cierre { margin-top: 56px; padding: 40px 24px; }
-  .lp-legal { justify-content: center; text-align: center; }
 }
+
+/* <picture> es en línea por defecto y descuadra el centrado de las imágenes */
+.lp picture { display: block; }
+.lp-hero picture { position: relative; z-index: 2; }

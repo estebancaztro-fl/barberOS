@@ -5,6 +5,19 @@ import { fmt } from "@/lib/store";
 import { Calendar, Users, Dollar, Clock } from "@/components/Icons";
 
 /**
+ * WebP para quien lo soporta —que es casi todo el mundo— y PNG de respaldo.
+ * Así no hay que elegir entre que se vea bien y que cargue rápido.
+ */
+function Imagen({ nombre, alt, clase }) {
+  return (
+    <picture>
+      <source srcSet={`/landing/${nombre}.webp`} type="image/webp" />
+      <img className={clase} src={`/landing/${nombre}.png`} alt={alt} loading="lazy" />
+    </picture>
+  );
+}
+
+/**
  * Portada para quien todavía no tiene cuenta.
  *
  * El orden no es casual: primero el dolor que el barbero reconoce al tiro
@@ -68,7 +81,12 @@ export default function Landing() {
           <span className="lp-nota">Sin agregar una tarjeta.</span>
         </div>
 
-        <img className="lp-hero-img" src="/landing/hero.png" alt="BarberOS en el teléfono, junto a las herramientas del barbero" />
+        {/* Sin lazy: es lo primero que se ve */}
+        <picture>
+          <source srcSet="/landing/hero.webp" type="image/webp" />
+          <img className="lp-hero-img" src="/landing/hero.png"
+            alt="BarberOS en el teléfono, junto a las herramientas del barbero" />
+        </picture>
       </header>
 
       {/* ================= Módulos ================= */}
@@ -114,13 +132,13 @@ export default function Landing() {
         </div>
 
         <div className="lp-vis-img">
-          <img src="/landing/rostro.png" alt="Análisis de rostro: forma detectada Cuadrado, 86% de coincidencia" />
+          <Imagen nombre="rostro" alt="Análisis de rostro: forma detectada Cuadrado, 86% de coincidencia" />
         </div>
       </section>
 
       {/* ================= El panel ================= */}
       <section className="lp-panel">
-        <img src="/landing/panel.png" alt="Panel de BarberOS con la agenda del día, ingresos y ranking de barberos" />
+        <Imagen nombre="panel" alt="Panel de BarberOS con la agenda del día, ingresos y ranking de barberos" />
       </section>
 
       {/* ================= Precio ================= */}
@@ -165,10 +183,9 @@ export default function Landing() {
 
       {/* ================= Marca ================= */}
       <footer className="lp-pie">
-        <img className="lp-marca" src="/landing/marca.png" alt="BarberOS" />
+        <Imagen nombre="marca" alt="BarberOS" clase="lp-marca" />
         <div className="lp-legal">
-          <span>© {new Date().getFullYear()} BarberOS</span>
-          <span>Hecho en Chile · Datos alojados en Sudamérica</span>
+          © {new Date().getFullYear()} BarberOS. Hecho por barberos, para barberos · Chile
         </div>
       </footer>
     </div>
