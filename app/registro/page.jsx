@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSesion } from "@/lib/sesion";
 import { mensajeError } from "@/lib/supabase";
 import { aSlug } from "@/lib/texto";
+import { PLAN } from "@/lib/planes";
 import { Scissors } from "@/components/Icons";
 
 export default function Registro() {
@@ -79,14 +80,16 @@ export default function Registro() {
           <div className="brand-icon"><Scissors /></div>
           <div>
             <h1>Crea tu barbería</h1>
-            <p>30 días de prueba, sin tarjeta</p>
+            <p>{PLAN.diasDePrueba} días de prueba gratis, sin tarjeta</p>
           </div>
         </div>
 
         <div className="field">
           <label>Nombre de tu barbería</label>
+          {/* El ejemplo es un nombre inventado a propósito: usar el de una
+              barbería que existe de verdad se presta para confusiones */}
           <input required autoFocus value={f.barberia}
-            onChange={(e) => set("barberia", e.target.value)} placeholder="Barber Royce" />
+            onChange={(e) => set("barberia", e.target.value)} placeholder="Barbería Los Andes" />
           {f.barberia.trim().length >= 2 && (
             <p className="muted" style={{ marginTop: 7, fontSize: 12.5 }}>
               Tu link de reservas será <b>/b/{aSlug(f.barberia)}</b>
