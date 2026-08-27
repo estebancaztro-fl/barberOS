@@ -1373,7 +1373,15 @@ td svg { width: 15px; height: 15px; color: var(--mut); vertical-align: -2px; mar
   .lp-luz { filter: blur(70px); }
   /* En celular el isotipo queda diminuto detrás del teléfono: se agranda
      para que se lea como fondo, igual que en el diseño */
-  .lp-isotipo { width: 175vw; }
+  .lp-isotipo { width: 120vw; }
+
+  /* El legal va ARRIBA de la marca, no encima: sobre el degradado del
+     logotipo el texto se vuelve ilegible en pantalla chica */
+  .lp-pie { display: flex; flex-direction: column; padding-top: 56px; }
+  .lp-legal {
+    position: static; order: -1;
+    padding: 0 16px 20px;
+  }
   .lp-seccion { padding-top: 72px; }
   .lp-seccion h2, .lp-cierre h2 { font-size: 27px; margin-bottom: 30px; }
   .lp-grid { grid-template-columns: 1fr; gap: 16px; }

@@ -212,7 +212,7 @@ export default function Landing() {
       <footer className="lp-pie">
         <Imagen nombre="marca" alt="BarberOS" clase="lp-marca" />
         <div className="lp-legal">
-          © {new Date().getFullYear()} BarberOS. Hecho por barberos, para barberos · Chile
+          © {new Date().getFullYear()} BarberOS. Hecho con barberos, para barberos · Chile
         </div>
       </footer>
     </div>
