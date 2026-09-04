@@ -25,7 +25,12 @@ export async function GET(request) {
   }
 
   const admin = clienteAdmin();
-  if (!admin) return Response.json({ ok: false, motivo: "sin clave secreta" });
+  if (!admin) {
+    return Response.json({
+      ok: false,
+      motivo: "Falta SUPABASE_SECRET_KEY en las variables de Vercel.",
+    }, { status: 500 });
+  }
 
   /* La consulta más barata posible: solo confirma que la base responde */
   const { error } = await admin
@@ -34,7 +39,16 @@ export async function GET(request) {
 
   if (error) {
     console.error("latido", error.message);
-    return Response.json({ ok: false, error: error.message }, { status: 500 });
+    /* "fetch failed" no es un error de la consulta: es que no hubo con quién
+       hablar. Casi siempre significa proyecto pausado o caído. */
+    const inalcanzable = /fetch failed|network|ENOTFOUND|ECONNREFUSED/i
+      .test(error.message || "");
+    return Response.json({
+      ok: false,
+      motivo: inalcanzable
+        ? "La base no responde: el proyecto de Supabase está pausado o caído. Este latido evita que se pause, pero no lo despausa: hay que darle Resume."
+        : error.message,
+    }, { status: 503 });
   }
 
   return Response.json({ ok: true, cuando: new Date().toISOString() });
